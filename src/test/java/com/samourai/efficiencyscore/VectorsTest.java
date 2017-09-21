@@ -19,10 +19,10 @@ public class VectorsTest {
     public void test() {
         Map<String, Integer> inputs;
         Map<String, Integer> outputs;
-        TxosLinkerOptionEnum[] options = new TxosLinkerOptionEnum[]{TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY};
+        TxosLinkerOptionEnum[] options = new TxosLinkerOptionEnum[]{TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY, TxosLinkerOptionEnum.MERGE_INPUTS};
         int maxDuration = 600; //TODO defaults
         int maxTxos = 12; //TODO defaults
-        int maxCjIntrafeesRatio = 0; //TODO defaults
+        float maxCjIntrafeesRatio = 0; // 0.005f; //TODO defaults
 
         inputs = new HashMap<>();
         inputs.put("1FJNUgMPRyBx6ahPmsH6jiYZHDWBPEHfU7", 10000000);
@@ -49,7 +49,7 @@ public class VectorsTest {
         // TODO more tests
     }
 
-    private void processTest(Map<String, Integer> inputs, Map<String, Integer> outputs, TxosLinkerOptionEnum[] options, int maxDuration, int maxTxos, int maxCjIntrafeesRatio, TxProcessorResult expected, String[][] expectedReadableDtrmLnks) {
+    private void processTest(Map<String, Integer> inputs, Map<String, Integer> outputs, TxosLinkerOptionEnum[] options, int maxDuration, int maxTxos, float maxCjIntrafeesRatio, TxProcessorResult expected, String[][] expectedReadableDtrmLnks) {
         long t1 = System.currentTimeMillis();
         int sumInputs = inputs.values().stream().mapToInt(value -> value).sum();
         int sumOutputs = outputs.values().stream().mapToInt(value -> value).sum();
@@ -60,7 +60,7 @@ public class VectorsTest {
 
         Txos txos = new Txos(inputs, outputs);
         Tx tx = new Tx(txos);
-        TxProcessorResult result = txProcessor.processTx(tx, options, maxDuration, maxTxos, maxCjIntrafeesRatio);
+        TxProcessorResult result = txProcessor.processTx(tx, new HashSet<>(Arrays.asList(options)), maxDuration, maxTxos, maxCjIntrafeesRatio);
         client.displayResults(result);
 
         System.out.println("Duration = "+ (System.currentTimeMillis() - t1)+"ms");

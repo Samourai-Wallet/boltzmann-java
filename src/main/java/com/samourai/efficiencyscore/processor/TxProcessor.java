@@ -1,8 +1,12 @@
 package com.samourai.efficiencyscore.processor;
 
+import com.google.common.collect.Sets;
 import com.samourai.efficiencyscore.beans.Tx;
 import com.samourai.efficiencyscore.beans.Txos;
-import com.samourai.efficiencyscore.linker.*;
+import com.samourai.efficiencyscore.linker.IntraFees;
+import com.samourai.efficiencyscore.linker.TxosLinker;
+import com.samourai.efficiencyscore.linker.TxosLinkerOptionEnum;
+import com.samourai.efficiencyscore.linker.TxosLinkerResult;
 import com.samourai.efficiencyscore.utils.ListsUtils;
 
 import java.util.*;
@@ -22,8 +26,7 @@ public class TxProcessor {
      * @param maxCjIntrafeesRatio max intrafees paid by the taker of a coinjoined transaction. Expressed as a percentage of the coinjoined amount.
      * @return TxProcessorResult
      */
-    public TxProcessorResult processTx(Tx tx, TxosLinkerOptionEnum[] options, int maxDuration, int maxTxos, int maxCjIntrafeesRatio) {
-
+    public TxProcessorResult processTx(Tx tx, Set<TxosLinkerOptionEnum> options, int maxDuration, int maxTxos, float maxCjIntrafeesRatio) {
         long t1 = System.currentTimeMillis();
 
         // Builds lists of filtered input/output txos (with generated ids)
@@ -53,9 +56,18 @@ public class TxProcessor {
             TxosLinker linker = new TxosLinker(filteredTxos, fees, maxDuration, maxTxos);
 
             // Computes a list of sets of inputs controlled by a same address
-            Collection<Set<String>> linkedIns = new ArrayList<>();//linked_ins = getLinkedTxos(filtered_ins, map_ins) if ('MERGE_INPUTS' in options) else [] //TODO V2
-            // Computes a list of sets of outputs controlled by a same address (not recommended)
-            Collection<Set<String>> linkedOuts = new ArrayList<>();//linked_outs = get_linked_txos(filtered_outs, map_outs) if ('MERGE_OUTPUTS' in options) else [] //TODO V2
+            List<Set<String>> linkedIns = new ArrayList<>();
+            List<Set<String>> linkedOuts = new ArrayList<>();
+
+            if (options.contains(TxosLinkerOptionEnum.MERGE_INPUTS)) {
+                // Computes a list of sets of inputs controlled by a same address
+                linkedIns = getLinkedTxos(filteredIns);
+            }
+
+            if (options.contains(TxosLinkerOptionEnum.MERGE_OUTPUTS)) {
+                // Computes a list of sets of outputs controlled by a same address (not recommended)
+                linkedOuts = getLinkedTxos(filteredOuts);
+            }
 
             // Computes intrafees to be used during processing
             if (maxCjIntrafeesRatio > 0) {
@@ -72,11 +84,11 @@ public class TxProcessor {
                 int maxNbPtcpts = ListsUtils.mergeSets(insToMerge).size();
 
                 // Checks if tx has a coinjoin pattern + gets estimated number of participants and coinjoined amount
-                boolean isCj = false; // is_cj, nb_ptcpts, cj_amount = check_coinjoin_pattern(filtered_ins, filtered_outs, max_nb_ptcpts) // TODO IMPLEMENT
+                CoinjoinPattern cjPattern = checkCoinjoinPattern(filteredOuts.getTxos(), maxNbPtcpts);
 
                 // If coinjoin pattern detected, computes theoretic max intrafees
-                if (isCj) {
-                    // intrafees = compute_coinjoin_intrafees(nb_ptcpts, cj_amount, max_cj_intrafees_ratio) // TODO IMPLEMENT
+                if (cjPattern != null) {
+                    intraFees = computeCoinjoinIntrafees(cjPattern.getNbPtcpts(), cjPattern.getCjAmount(), maxCjIntrafeesRatio);
                 }
             }
 
@@ -95,6 +107,40 @@ public class TxProcessor {
         Map<String, Integer> txoIns = postProcessTxos(result.getTxos().getInputs(), filteredIns.getMapIdAddr());
         Map<String, Integer> txoOuts = postProcessTxos(result.getTxos().getOutputs(), filteredOuts.getMapIdAddr());
         return new TxProcessorResult(result.getNbCmbn(), result.getMatLnk(), result.getDtrmLnks(), new Txos(txoIns, txoOuts), fees, intraFees, efficiency);
+    }
+
+    /**
+     * Computes a list of sets of txos controlled by a same address
+     Returns a list of sets of txo_ids [ {txo_id1, txo_id2, ...}, {txo_id3, txo_id4, ...} ]
+     * @param filteredTxos FilteredTxos
+     */
+    private List<Set<String>> getLinkedTxos(FilteredTxos filteredTxos) { // TODO test
+        List<Set<String>[]> linkedTxos = new ArrayList<>();
+
+        filteredTxos.getTxos().forEach((id, amount) -> {
+            Set<String> setIns = new HashSet<>();
+            setIns.add(id);
+
+            Set<String> setAddr = new HashSet<>();
+            setAddr.add(filteredTxos.getMapIdAddr().get(id));
+
+            // Checks if this set intersects with some set previously found
+            linkedTxos.forEach(entry -> {
+                Set<String> k = entry[0];
+                Set<String> v = entry[1];
+                if (!Sets.intersection(k, setAddr).isEmpty()) {
+                    // If an intersection is found, merges the 2 sets and removes previous set from linked_txos
+                    setIns.addAll(v);
+                    setAddr.addAll(k);
+                    linkedTxos.remove(entry);
+                }
+            });
+
+            linkedTxos.add(new Set[]{setAddr, setIns});
+        });
+
+        List<Set<String>> result = linkedTxos.stream().filter(sets -> sets[1].size()>1).map(sets -> sets[1]).collect(Collectors.toList());
+        return result;
     }
 
     /**
@@ -133,6 +179,69 @@ public class TxProcessor {
             }
             return entry; // PACKS, FEES...
         }).collect(Collectors.toMap(entry -> entry.getKey(),entry -> entry.getValue()));
+    }
+
+    /**
+     * Checks if a transaction looks like a coinjoin
+     Returns a tuple (is_coinjoin, nb_participants, coinjoined_amount)
+     * @param txoOuts list of outputs valves (tuples (tiid, amount))
+     * @param maxNbEntities estimated max number of entities participating in the coinjoin (info coming from a side channel source or from an analysis of tx structure)
+     * @return CoinjoinPattern if coinjoin pattern is found, otherwise null
+     */
+    protected CoinjoinPattern checkCoinjoinPattern(Map<String, Integer> txoOuts, int maxNbEntities) {
+        // Checks that we have more than 1 input entity
+        if (maxNbEntities < 2) {
+            return null;
+        }
+
+        // Computes a dictionary of #outputs per amount (d[amount] = nb_outputs)
+        Map<Integer, Integer> nbOutsByAmount = txoOuts.entrySet().stream().collect(
+                Collectors.groupingBy(Map.Entry::getValue, Collectors.summingInt(s -> 1)) // counting as integer
+        );
+
+        // Computes #outputs
+        int nbTxoOuts = txoOuts.size();
+
+        // Tries to detect a coinjoin pattern in outputs:
+        //   n outputs with same value, with n > 1
+        //   nb_outputs <= 2*nb_ptcpts (with nb_ptcpts = min(n, max_nb_entities) )
+        // If multiple candidate values
+        // selects option with max number of participants (and max amount as 2nd criteria)
+        boolean isCj = false;
+        int resNbPtcpts = 0;
+        int resAmount = 0;
+        for (Map.Entry<Integer,Integer> entry : nbOutsByAmount.entrySet()) {
+            int amount = entry.getKey();
+            int nbOutsForAmount = entry.getValue();
+            if (nbOutsForAmount > 1) {
+                int maxNbPtcpts = Math.min(nbOutsForAmount, maxNbEntities);
+                boolean condTxoOuts = nbTxoOuts <= 2 * maxNbPtcpts;
+                boolean condMaxPtcpts = maxNbPtcpts >= resNbPtcpts;
+                boolean condMaxAmount = amount > resAmount;
+                if (condTxoOuts && condMaxPtcpts && condMaxAmount) {
+                    isCj = true;
+                    resNbPtcpts = maxNbPtcpts;
+                    resAmount = amount;
+                }
+            }
+        }
+        if (!isCj) {
+            return null;
+        }
+        return new CoinjoinPattern(resNbPtcpts, resAmount);
+    }
+
+    /**
+     * Computes theoretic intrafees involved in a coinjoin transaction (e.g. joinmarket)
+     * @param nbPtcpts number of participants
+     * @param cjAmount common amount generated for the coinjoin transaction
+     * @param prctMax max percentage paid by the taker to all makers
+     * @return IntraFees
+     */
+    protected IntraFees computeCoinjoinIntrafees(int nbPtcpts, int cjAmount, float prctMax) {
+        int feeMaker = Math.round(cjAmount * prctMax);
+        int feeTaker = feeMaker * (nbPtcpts - 1);
+        return new IntraFees(feeMaker, feeTaker);
     }
 
     /**

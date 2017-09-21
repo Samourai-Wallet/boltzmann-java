@@ -15,6 +15,16 @@ public enum TxosLinkerOptionEnum {
     PRECHECK,
 
     /**
+     * Merges inputs "controlled" by a same address. Speeds up computations.
+     */
+    MERGE_INPUTS,
+
+    /**
+     * Merges outputs "controlled" by a same address. Speeds up computations but this option is not recommended.
+     */
+    MERGE_OUTPUTS,
+
+    /**
      * consider that all fees have been paid by a unique sender and manage fees as an additionnal output
      */
     MERGE_FEES

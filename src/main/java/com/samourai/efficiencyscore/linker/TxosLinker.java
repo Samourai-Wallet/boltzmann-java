@@ -55,15 +55,13 @@ public class TxosLinker {
     /**
      * Computes the linkability between a set of input txos and a set of output txos.
      * @param linkedTxos list of sets storing linked input txos. Each txo is identified by its id
-     * @param optionsArray actions to be applied
+     * @param options actions to be applied
      * @param intraFees tuple (fees_maker, fees_taker) of max "fees" paid among participants used for joinmarket transactions
                         fees_maker are potential max "fees" received by a participant from another participant
                         fees_taker are potential max "fees" paid by a participant to all others participants
      * @return
      */
-    public TxosLinkerResult process(Collection<Set<String>> linkedTxos, TxosLinkerOptionEnum[] optionsArray, IntraFees intraFees) {
-        Set<TxosLinkerOptionEnum> options = new HashSet<>(Arrays.asList(optionsArray)); // TODO?
-
+    public TxosLinkerResult process(Collection<Set<String>> linkedTxos, Set<TxosLinkerOptionEnum> options, IntraFees intraFees) {
         // Packs txos known as being controlled by a same entity
         // It decreases the entropy and speeds-up computations
         if(linkedTxos!=null && !linkedTxos.isEmpty()) {
