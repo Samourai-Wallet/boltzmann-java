@@ -22,14 +22,13 @@ public class ListsUtils {
                 Set<String> current = tmp_sets.poll();
                 LinkedList<Set<String>> rest = tmp_sets;
                 tmp_sets = new LinkedList<>();
-                for (int i=0; i<rest.size(); i++) {
-                    Set<String> x = rest.get(i);
+                for (Set<String> x : rest) {
                     if(Collections.disjoint(current, x)) {
                         tmp_sets.add(x);
                     }
                     else {
                         merged = true;
-                        current = Sets.union(current, x);
+                        current.addAll(x);
                     }
                 }
                 res.add(current);
