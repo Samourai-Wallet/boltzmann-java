@@ -65,7 +65,7 @@ public class TxosLinker {
         // Packs txos known as being controlled by a same entity
         // It decreases the entropy and speeds-up computations
         if(linkedTxos!=null && !linkedTxos.isEmpty()) {
-            ListsUtils.mergeSets(linkedTxos);
+            txos = packLinkedTxos(linkedTxos, txos); // TODO test + verif txos vs packedTxos
         }
 
         // Manages fees
@@ -88,7 +88,7 @@ public class TxosLinker {
         // Checks deterministic links
         int nbCmbn = 0;
         int[][] matLnk = new int[nbOuts][nbIns];
-        Set<int[]> dtrmLnks = null;
+        Set<int[]> dtrmLnks = new LinkedHashSet<>();
         if (options.contains(TxosLinkerOptionEnum.PRECHECK) && this.checkLimitOk() && !hasIntraFees) {
 
             // Prepares the data
@@ -101,12 +101,12 @@ public class TxosLinker {
             // If deterministic links have been found, fills the linkability matrix
             // (returned as result if linkability is not processed)
             if (!dtrmLnks.isEmpty()) {
-                for (int[] dtrmLnk : dtrmLnks) {
-                    matLnk[dtrmLnk[0]][dtrmLnk[1]] = 1;
-                }
+                final int[][] matLnkFinal = matLnk;
+                dtrmLnks.forEach(dtrmLnk ->
+                    matLnkFinal[dtrmLnk[0]][dtrmLnk[1]] = 1
+                );
             }
         }
-
         Txos packedTxos = txos;
 
         // Checks if all inputs and outputs have already been merged
@@ -118,28 +118,31 @@ public class TxosLinker {
         }
         else if(options.contains(TxosLinkerOptionEnum.LINKABILITY) && this.checkLimitOk()) {
             // Packs deterministic links if needed
-            if (dtrmLnks != null && !dtrmLnks.isEmpty()) {
+            if (!dtrmLnks.isEmpty()) {
 
                 List<Set<String>> dtrmCoordsList = dtrmLnks.stream().map(array -> {
-                    Set<String> set = new HashSet<>();
-                    set.add("O"+array[0]); // TODO constant
-                    set.add("I"+array[1]); // TODO constant
+                    Set<String> set = new LinkedHashSet<>();
+                    set.add("O" + array[0]); // TODO constant TODO verify
+                    set.add("I" + array[1]); // TODO constant TODO verify
                     return set;
                 }).collect(Collectors.toList());
                 packedTxos = packLinkedTxos(dtrmCoordsList, txos);
-
-                // Prepares data
-                TxosAggregates allAgg = aggregator.prepareData(packedTxos); // TODO optimize repetition
-                TxosAggregatesMatches aggMatches = aggregator.matchAggByVal(allAgg, fees, intraFees); // TODO optimize repetition
-
-                // Computes a matrix storing a tree composed of valid pairs of input aggregates
-                Map<Integer,List<int[]>> matInAggCmbn = aggregator.computeInAggCmbn(aggMatches);
-
-                // Builds the linkability matrix
-                TxosAggregatorResult result = aggregator.computeLinkMatrix(packedTxos, allAgg, aggMatches, matInAggCmbn, maxDuration);
-                nbCmbn = result.getNbCmbn();
-                matLnk = result.getMatLnk();
             }
+
+            // Prepares data
+            TxosAggregates allAgg = aggregator.prepareData(packedTxos); // TODO optimize repetition
+            TxosAggregatesMatches aggMatches = aggregator.matchAggByVal(allAgg, fees, intraFees); // TODO optimize repetition
+
+            // Computes a matrix storing a tree composed of valid pairs of input aggregates
+            Map<Integer,List<int[]>> matInAggCmbn = aggregator.computeInAggCmbn(aggMatches);
+
+            // Builds the linkability matrix
+            TxosAggregatorResult result = aggregator.computeLinkMatrix(packedTxos, allAgg, aggMatches, matInAggCmbn, maxDuration);
+            nbCmbn = result.getNbCmbn();
+            matLnk = result.getMatLnk();
+
+            // Refresh deterministical links
+            dtrmLnks = aggregator.findDtrmLinks(matLnk, nbCmbn);
         }
 
         // Unpacks the matrix
@@ -196,7 +199,7 @@ public class TxosLinker {
     private Txos packLinkedTxos(Collection<Set<String>> linkedTxos, Txos txos) {
         int idx = packs.size();
 
-        Txos packedTxos = new Txos(new HashMap<>(txos.getInputs()), new HashMap<>(txos.getOutputs()));
+        Txos packedTxos = new Txos(new LinkedHashMap<>(txos.getInputs()), new LinkedHashMap<>(txos.getOutputs()));
 
         // Merges packs sharing common elements
         List<Set<String>> newPacks = ListsUtils.mergeSets(linkedTxos);

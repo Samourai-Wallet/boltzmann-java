@@ -27,8 +27,6 @@ public class TxProcessor {
      * @return TxProcessorResult
      */
     public TxProcessorResult processTx(Tx tx, Set<TxosLinkerOptionEnum> options, int maxDuration, int maxTxos, float maxCjIntrafeesRatio) {
-        long t1 = System.currentTimeMillis();
-
         // Builds lists of filtered input/output txos (with generated ids)
         FilteredTxos filteredIns = filterTxos(tx.getTxos().getInputs(), 'I');
         FilteredTxos filteredOuts = filterTxos(tx.getTxos().getOutputs(), 'O');
@@ -72,12 +70,13 @@ public class TxProcessor {
             // Computes intrafees to be used during processing
             if (maxCjIntrafeesRatio > 0) {
                 // Computes a theoretic max number of participants
-                Collection<Set<String>> lsFilteredIns = filteredIns.getTxos().keySet().stream().map(txoId -> {
-                    Set<String> set = new HashSet<>();
+                List<Set<String>> lsFilteredIns = filteredIns.getTxos().keySet().stream().map(txoId -> {
+                    Set<String> set = new LinkedHashSet<>();
                     set.add(txoId);
                     return set;
                 }).collect(Collectors.toList());
 
+                lsFilteredIns.addAll(linkedIns);
                 Collection<Set<String>> insToMerge = new ArrayList<>();
                 insToMerge.addAll(lsFilteredIns);
                 insToMerge.addAll(linkedIns);
@@ -118,10 +117,10 @@ public class TxProcessor {
         List<Set<String>[]> linkedTxos = new ArrayList<>();
 
         filteredTxos.getTxos().forEach((id, amount) -> {
-            Set<String> setIns = new HashSet<>();
+            Set<String> setIns = new LinkedHashSet<>();
             setIns.add(id);
 
-            Set<String> setAddr = new HashSet<>();
+            Set<String> setAddr = new LinkedHashSet<>();
             setAddr.add(filteredTxos.getMapIdAddr().get(id));
 
             // Checks if this set intersects with some set previously found
@@ -151,8 +150,8 @@ public class TxProcessor {
      * @return FilteredTxos
      */
     private FilteredTxos filterTxos(Map<String, Integer> txos, char prefix) {
-        Map<String, Integer> filteredTxos = new HashMap<>();
-        Map<String, String> mapIdAddr = new HashMap<>();
+        Map<String, Integer> filteredTxos = new LinkedHashMap<>();
+        Map<String, String> mapIdAddr = new LinkedHashMap<>();
 
         txos.entrySet().forEach(entry -> {
             if (entry.getValue() > 0) {
@@ -178,7 +177,7 @@ public class TxProcessor {
                 return new AbstractMap.SimpleEntry<>(mapIdAddr.get(entry.getKey()), entry.getValue());
             }
             return entry; // PACKS, FEES...
-        }).collect(Collectors.toMap(entry -> entry.getKey(),entry -> entry.getValue()));
+        }).collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue(), (u,v) -> { throw new IllegalStateException(String.format("Duplicate key %s", u)); }, LinkedHashMap::new));
     }
 
     /**

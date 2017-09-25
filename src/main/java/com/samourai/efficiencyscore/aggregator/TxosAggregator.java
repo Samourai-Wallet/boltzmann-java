@@ -1,7 +1,7 @@
 package com.samourai.efficiencyscore.aggregator;
 
-import com.samourai.efficiencyscore.linker.IntraFees;
 import com.samourai.efficiencyscore.beans.Txos;
+import com.samourai.efficiencyscore.linker.IntraFees;
 import com.samourai.efficiencyscore.utils.ListsUtils;
 
 import java.util.*;
@@ -39,7 +39,7 @@ public class TxosAggregator {
                 .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
 
                 // Creates a 1D array of values
-                .collect(Collectors.toMap(x -> x.getKey(), x -> x.getValue()));
+                .collect(Collectors.toMap(x -> x.getKey(), x -> x.getValue(), (u,v) -> { throw new IllegalStateException(String.format("Duplicate key %s", u)); }, LinkedHashMap::new));
 
 
         // Creates a 1D array of values
@@ -68,7 +68,7 @@ public class TxosAggregator {
         int[] allUniqueInAggVal = Arrays.stream(allInAggVal).distinct().sorted().toArray();
         int[] allUniqueOutAggVal = Arrays.stream(allOutAggVal).distinct().sorted().toArray();
 
-        Set<Integer> allMatchInAgg = new HashSet<>();
+        Set<Integer> allMatchInAgg = new LinkedHashSet<>();
         Map<Integer, Integer> matchInAggToVal = new LinkedHashMap<>();
         Map<Integer, int[]> valToMatchOutAgg = new LinkedHashMap<>();
 
@@ -131,7 +131,7 @@ public class TxosAggregator {
         aggs.pollFirst(); // remove 0
 
         int tgt = aggs.pollLast();
-        Map<Integer,List<int[]>> mat = new HashMap<>();
+        Map<Integer,List<int[]>> mat = new LinkedHashMap<>();
 
         for (int i=0; i<tgt+1; i++) {
             if (aggs.contains(i)) {
@@ -165,21 +165,20 @@ public class TxosAggregator {
             int inIdx = inEntry.getKey();
             int val = inEntry.getValue();
             for (int outIdx : aggMatches.getValToMatchOutAgg().get(val)) {
-                getLinkCmbn(matCmbn, inCmbn, inIdx, outIdx, allAgg); // TODO performances?
-            }
-        }
+                // Computes a matrix storing numbers of raw combinations matching input/output pairs
+                updateLinkCmbn(matCmbn, inIdx, outIdx, allAgg);
 
-        // Builds a list of sets storing inputs having a deterministic link with an output
-        int nbCmbn = inCmbn[0]; // TODO VERIFY
-        Set<int[]> dtrmCoords = new HashSet<>();
-        for (int i=0; i<nbOuts; i++) { // TODO optimize (filter?)
-            for (int j=0; j<nbIns; j++) {
-                if (matCmbn[i][j] == nbCmbn) {
-                    dtrmCoords.add(new int[]{i,j});
+                // Computes sum of combinations along inputs axis to get the number of combinations
+                int[] inIndexes = allAgg.getInAgg().getAllAggIndexes()[inIdx];
+                for (int inIndex : inIndexes) {
+                    inCmbn[inIndex]++;
                 }
             }
         }
 
+        // Builds a list of sets storing inputs having a deterministic link with an output
+        int nbCmbn = inCmbn[0];
+        Set<int[]> dtrmCoords = findDtrmLinks(matCmbn, nbCmbn);
         return dtrmCoords;
     }
 
@@ -229,7 +228,7 @@ public class TxosAggregator {
         int nbTxCmbn = 0;
         int itGt = (int)Math.pow(2, txos.getInputs().size())-1; // TODO int
         int otGt = (int)Math.pow(2, txos.getOutputs().size())-1;
-        Map<int[],Integer> dLinks = new HashMap<>();
+        Map<int[],Integer> dLinks = new LinkedHashMap<>();
 
         // Initializes a stack of tasks & sets the initial task
         //  0: index used to resume the processing of the task (required for depth-first algorithm)
@@ -241,8 +240,8 @@ public class TxosAggregator {
         Deque<ComputeLinkMatrixTask> stack = new LinkedList<>();
 
         // ini_d_out[otgt] = { 0: (1, 0) }
-        Map<Integer,Map<Integer,int[]>> dOutInitial = new HashMap<>();
-        Map<Integer,int[]> dOutEntry = new HashMap<>();
+        Map<Integer,Map<Integer,int[]>> dOutInitial = new LinkedHashMap<>();
+        Map<Integer,int[]> dOutEntry = new LinkedHashMap<>();
         dOutEntry.put(0, new int[]{1,0});
         dOutInitial.put(otGt, dOutEntry);
 
@@ -270,7 +269,7 @@ public class TxosAggregator {
 
             for (int i=t.getIdxIl(); i<lenIrcs; i++) {
                 nIdxIl = i;
-                Map<Integer,Map<Integer,int[]>> ndOut = new HashMap<>();
+                Map<Integer,Map<Integer,int[]>> ndOut = new LinkedHashMap<>();
 
                 // Gets left input sub-aggregate (column from ircs)
                 int nIl = ircs.get(i)[1];
@@ -307,7 +306,7 @@ public class TxosAggregator {
                                 if ((nSol & nOr) == 0 && IntStream.of(matchOutAgg).anyMatch(x -> x == nOr)){ // TODO performance matchOutAgg.contains(nOr)
                                     Map<Integer,int[]> ndOutVal = ndOut.get(nOr);
                                     if (ndOutVal == null) {
-                                        ndOutVal = new HashMap<>();
+                                        ndOutVal = new LinkedHashMap<>();
                                         ndOut.put(nOr, ndOutVal);
                                     }
                                     ndOutVal.put(nOl, new int[]{nbPrt,0});
@@ -381,58 +380,65 @@ public class TxosAggregator {
         }
 
         // Fills the matrix
-        int[][] links = getLinkCmbn2(itGt, otGt, allAgg);
+        int[][] links = newLinkCmbn(allAgg);
+        updateLinkCmbn(links, itGt, otGt, allAgg);
         nbTxCmbn++;
         for (Map.Entry<int[],Integer> linkEntry : dLinks.entrySet()) {
             int[] link = linkEntry.getKey();
             int mult = linkEntry.getValue();
-            int[][] linkCmbn = getLinkCmbn2(link[0], link[1], allAgg);
+            int[][] linkCmbn = newLinkCmbn(allAgg);
+            updateLinkCmbn(linkCmbn, link[0], link[1], allAgg);
             IntStream.range(0, links.length).forEach(i -> IntStream.range(0, links[i].length).forEach(j ->
-                    links[i][j] += linkCmbn[i][j] * mult
+                links[i][j] += linkCmbn[i][j] * mult
             ));
         }
         return new TxosAggregatorResult(nbTxCmbn, links);
     }
 
     /**
-     * Computes a linkability matrix encoding the matching of given input/output aggregates.
-     * @param inAgg input aggregate
-     * @param outAgg output aggregate
+     * Creates a new linkability matrix.
      * @param allAgg
      */
-    private int[][] getLinkCmbn2(int inAgg, int outAgg, TxosAggregates allAgg) {
+    private int[][] newLinkCmbn(TxosAggregates allAgg) {
         int maxOutIndex = Arrays.stream(allAgg.getOutAgg().getAllAggIndexes()).mapToInt(indexes -> Arrays.stream(indexes).max().orElse(0)).max().orElse(0);
         int maxInIndex = Arrays.stream(allAgg.getInAgg().getAllAggIndexes()).mapToInt(indexes -> Arrays.stream(indexes).max().orElse(0)).max().orElse(0);
-        int[] outIndexes = allAgg.getOutAgg().getAllAggIndexes()[outAgg];
-        int[] inIndexes = allAgg.getInAgg().getAllAggIndexes()[inAgg];
-
         int[][] matCmbn = new int[maxOutIndex+1][maxInIndex+1];
-        for (int inIndex : inIndexes) {
-            for (int outIndex : outIndexes) {
-                matCmbn[outIndex][inIndex]++;
-            }
-        }
         return matCmbn;
     }
 
     /**
-     * Updates matCmbn and inCmbn for aggregate designated by inAgg/outAgg.
-     * @param matCmbn
-     * @param inCmbn
-     * @param inAgg
-     * @param outAgg
+     * Updates the linkability matrix for aggregate designated by inAgg/outAgg.
+     * @param matCmbn linkability matrix
+     * @param inAgg input aggregate
+     * @param outAgg output aggregate
      * @param allAgg
      */
-    private void getLinkCmbn(int[][] matCmbn, int[] inCmbn, int inAgg, int outAgg, TxosAggregates allAgg) { // TODO use getLinkCmbn2 instead
+    private int[][] updateLinkCmbn(int[][] matCmbn, int inAgg, int outAgg, TxosAggregates allAgg) {
         int[] outIndexes = allAgg.getOutAgg().getAllAggIndexes()[outAgg];
         int[] inIndexes = allAgg.getInAgg().getAllAggIndexes()[inAgg];
 
-        for (int inIndex : inIndexes) {
-            for (int outIndex : outIndexes) {
-                matCmbn[outIndex][inIndex]++;
-            }
-            inCmbn[inIndex]++;
-        }
+        Arrays.stream(inIndexes).forEach(inIndex ->
+                Arrays.stream(outIndexes).forEach(outIndex ->
+                        matCmbn[outIndex][inIndex]++
+                )
+        );
+        return matCmbn;
     }
 
+    /**
+     * Builds a list of sets storing inputs having a deterministic link with an output
+     * @param matCmbn linkability matrix
+     * @param nbCmbn number of combination
+     * @return
+     */
+    public Set<int[]> findDtrmLinks(int[][] matCmbn, int nbCmbn) {
+        Set<int[]> dtrmCoords = new LinkedHashSet<>();
+        IntStream.range(0, matCmbn.length).forEach(i ->
+                IntStream.range(0, matCmbn[i].length)
+                        .filter(j -> matCmbn[i][j] == nbCmbn).forEach(j ->
+                        dtrmCoords.add(new int[]{i,j})
+                )
+        );
+        return dtrmCoords;
+    }
 }

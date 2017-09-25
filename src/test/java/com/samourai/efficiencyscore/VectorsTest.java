@@ -22,28 +22,34 @@ public class VectorsTest {
         TxosLinkerOptionEnum[] options = new TxosLinkerOptionEnum[]{TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY, TxosLinkerOptionEnum.MERGE_INPUTS};
         int maxDuration = 600; //TODO defaults
         int maxTxos = 12; //TODO defaults
-        float maxCjIntrafeesRatio = 0; // 0.005f; //TODO defaults
 
-        inputs = new HashMap<>();
+        inputs = new LinkedHashMap<>();
         inputs.put("1FJNUgMPRyBx6ahPmsH6jiYZHDWBPEHfU7", 10000000);
         inputs.put("1JDHTo412L9RCtuGbYw4MBeL1xn7ZTuzLH", 1380000);
 
-        outputs = new HashMap<>();
+        outputs = new LinkedHashMap<>();
         outputs.put("18JNSFk8eRZcM8RdqLDSgCiipgnfAYsFef", 9850000);
         outputs.put("1PA1eHufj8axDWEbYfPtL8HXfA66gTFsFc", 1270000);
         outputs.put("1JR3x2xNfeFicqJcvzz1gkEhHEewJBb5Zb", 100000);
         outputs.put("1ALKUqxRb2MeFqomLCqeYwDZK6FvLNnP3H", 100000);
 
         int nbCmbn = 3;
-        int[][] matLnk = new int[][]{{2, 2}, {3, 1}, {1, 3}, {2, 2}}; // TODO same order than python version, use linkedlist
+        int[][] matLnk = new int[][]{{3, 1}, {1, 3}, {2, 2}, {2, 2}};
         String[][] expectedReadableDtrmLnks = new String[][]{
-                {"1PA1eHufj8axDWEbYfPtL8HXfA66gTFsFc", "1JDHTo412L9RCtuGbYw4MBeL1xn7ZTuzLH"},
-                {"18JNSFk8eRZcM8RdqLDSgCiipgnfAYsFef", "1FJNUgMPRyBx6ahPmsH6jiYZHDWBPEHfU7"}
+                {"18JNSFk8eRZcM8RdqLDSgCiipgnfAYsFef", "1FJNUgMPRyBx6ahPmsH6jiYZHDWBPEHfU7"},
+                {"1PA1eHufj8axDWEbYfPtL8HXfA66gTFsFc", "1JDHTo412L9RCtuGbYw4MBeL1xn7ZTuzLH"}
         };
         int fees = 60000;
-        IntraFees intraFees = new IntraFees(0, 0);
         Double efficiency = 0.42857142857142854;
+
+        float maxCjIntrafeesRatio = 0;
+        IntraFees intraFees = new IntraFees(0, 0);
         TxProcessorResult expected = new TxProcessorResult(nbCmbn, matLnk, null, new Txos(inputs, outputs), fees, intraFees, efficiency);
+        processTest(inputs, outputs, options, maxDuration, maxTxos, maxCjIntrafeesRatio, expected, expectedReadableDtrmLnks);
+
+        maxCjIntrafeesRatio = 0.005f;
+        intraFees = new IntraFees(500, 500);
+        expected = new TxProcessorResult(nbCmbn, matLnk, null, new Txos(inputs, outputs), fees, intraFees, efficiency);
         processTest(inputs, outputs, options, maxDuration, maxTxos, maxCjIntrafeesRatio, expected, expectedReadableDtrmLnks);
 
         // TODO more tests

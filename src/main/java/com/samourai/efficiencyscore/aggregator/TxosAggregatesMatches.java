@@ -1,15 +1,13 @@
 package com.samourai.efficiencyscore.aggregator;
 
-import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
 public class TxosAggregatesMatches {
 
-    private Set<Integer> allMatchInAgg = new HashSet<>();
-    private Map<Integer, Integer> matchInAggToVal = new LinkedHashMap<>();
-    private Map<Integer, int[]> valToMatchOutAgg = new LinkedHashMap<>();
+    private Set<Integer> allMatchInAgg;
+    private Map<Integer, Integer> matchInAggToVal;
+    private Map<Integer, int[]> valToMatchOutAgg;
 
     public TxosAggregatesMatches(Set<Integer> allMatchInAgg, Map<Integer, Integer> matchInAggToVal, Map<Integer, int[]> valToMatchOutAgg) {
         this.allMatchInAgg = allMatchInAgg;
