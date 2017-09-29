@@ -30,7 +30,6 @@ public class TxosAggregator {
     array of values associated to the aggregates
      */
     public TxosAggregatesData prepareTxos(Map<String, Integer> txos) {
-
         txos = txos.entrySet().stream()
                 // Removes txos with null value
                 .filter(x -> x.getValue() > 0)
@@ -50,7 +49,7 @@ public class TxosAggregator {
         int[][] allAggIndexes = ListsUtils.powerSet(allIndexes);
         //int[] allAggVal = Arrays.stream(allAgg).mapToInt(array -> Arrays.stream(array).sum()).toArray();
         int[] allAggVal = Arrays.stream(allAggIndexes).mapToInt(array -> Arrays.stream(array).map(indice -> allVal[indice]).sum()).toArray();
-        return new TxosAggregatesData(allAggIndexes, allAggVal);
+        return new TxosAggregatesData(txos, allAggIndexes, allAggVal);
     }
 
     /**
@@ -98,14 +97,12 @@ public class TxosAggregator {
 
                     if (condNoIntrafees || condIntraFees) {
                         // Registers the matching input aggregate
-                        int[] keysMatchInAgg = IntStream.range(0, allInAggVal.length).filter(indice -> allInAggVal[indice] == inAggVal).toArray();
-                        for (int k=0; k<keysMatchInAgg.length; k++) {
-                            int inIdx = keysMatchInAgg[k]; // TODO simplify
+                        IntStream.range(0, allInAggVal.length).filter(indice -> allInAggVal[indice] == inAggVal).forEach(inIdx -> {
                             if (!allMatchInAgg.contains(inIdx)) {
                                 allMatchInAgg.add(inIdx);
                                 matchInAggToVal.put(inIdx, inAggVal);
                             }
-                        }
+                        });
 
                         // Registers the matching output aggregate
                         int[] keysMatchOutAgg = IntStream.range(0, allOutAggVal.length).filter(indice -> allOutAggVal[indice] == outAggVal).toArray();
@@ -265,7 +262,7 @@ public class TxosAggregator {
 
             // Gets all valid decompositions of right input aggregate
             List<int[]> ircs = matInAggCmbn.get(t.getIr());
-            int lenIrcs = (ircs != null ? ircs.size() : 0); // TODO VERIFY null
+            int lenIrcs = (ircs != null ? ircs.size() : 0);
 
             for (int i=t.getIdxIl(); i<lenIrcs; i++) {
                 nIdxIl = i;
@@ -347,8 +344,8 @@ public class TxosAggregator {
 
                     // Iterates over all entries from d_out
                     for (Map.Entry<Integer,Map<Integer,int[]>> doutEntry : t.getdOut().entrySet()) {
-                        int or = doutEntry.getKey(); // TODO VERIFY
-                        Map<Integer,int[]> lOl = doutEntry.getValue(); // TODO VERIFY
+                        int or = doutEntry.getKey();
+                        Map<Integer,int[]> lOl = doutEntry.getValue();
                         int[] rKey = new int[]{t.getIr(), or};
 
                         // Iterates over all left aggregates
@@ -361,7 +358,7 @@ public class TxosAggregator {
 
                             // Updates the dictionary of links for the pair of aggregates
                             int nbOccur = nbChld+1;
-                            dLinks.put(rKey, dLinks.getOrDefault(rKey,0) + nbPrnt); // TODO VERIFY getOrDefault
+                            dLinks.put(rKey, dLinks.getOrDefault(rKey,0) + nbPrnt);
                             dLinks.put(lKey, dLinks.getOrDefault(lKey,0) + nbPrnt*nbOccur);
 
                             // Updates parent d_out by back-propagating number of child combinations

@@ -322,7 +322,7 @@ public class TxProcessor {
      * @param nbOuts number of outputs
      * @return the number of combinations
      */
-    private Double computeCmbnsPerfectCj(int nbIns, int nbOuts) { // TODO double
+    private Double computeCmbnsPerfectCj(int nbIns, int nbOuts) {
         if (nbIns > nbOuts) {
             // Reverses inputs and outputs
             int nbInsInitial = nbIns;
