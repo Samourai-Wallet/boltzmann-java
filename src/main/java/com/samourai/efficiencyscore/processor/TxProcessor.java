@@ -28,8 +28,8 @@ public class TxProcessor {
      */
     public TxProcessorResult processTx(Tx tx, Set<TxosLinkerOptionEnum> options, int maxDuration, int maxTxos, float maxCjIntrafeesRatio) {
         // Builds lists of filtered input/output txos (with generated ids)
-        FilteredTxos filteredIns = filterTxos(tx.getTxos().getInputs(), 'I');
-        FilteredTxos filteredOuts = filterTxos(tx.getTxos().getOutputs(), 'O');
+        FilteredTxos filteredIns = filterTxos(tx.getTxos().getInputs(), TxProcessorConst.MARKER_INPUT);
+        FilteredTxos filteredOuts = filterTxos(tx.getTxos().getOutputs(), TxProcessorConst.MARKER_OUTPUT);
 
         // Computes total input & output amounts + fees
         int sumInputs = filteredIns.getTxos().values().stream().mapToInt(x -> x).sum();
@@ -149,13 +149,13 @@ public class TxProcessor {
      * @param prefix a prefix to be used for ids generated
      * @return FilteredTxos
      */
-    private FilteredTxos filterTxos(Map<String, Integer> txos, char prefix) {
+    private FilteredTxos filterTxos(Map<String, Integer> txos, String prefix) {
         Map<String, Integer> filteredTxos = new LinkedHashMap<>();
         Map<String, String> mapIdAddr = new LinkedHashMap<>();
 
         txos.entrySet().forEach(entry -> {
             if (entry.getValue() > 0) {
-                String txoId = Character.toString(prefix)+mapIdAddr.size();
+                String txoId = prefix+mapIdAddr.size();
                 filteredTxos.put(txoId, entry.getValue());
                 mapIdAddr.put(txoId, entry.getKey());
             }
@@ -173,7 +173,7 @@ public class TxProcessor {
      */
     public Map<String, Integer> postProcessTxos(Map<String, Integer> txos, Map<String,String> mapIdAddr) {
         return txos.entrySet().stream().map(entry -> {
-            if (entry.getKey().startsWith("I") || entry.getKey().startsWith("O")) { // TODO constans
+            if (entry.getKey().startsWith(TxProcessorConst.MARKER_INPUT) || entry.getKey().startsWith(TxProcessorConst.MARKER_OUTPUT)) {
                 return new AbstractMap.SimpleEntry<>(mapIdAddr.get(entry.getKey()), entry.getValue());
             }
             return entry; // PACKS, FEES...

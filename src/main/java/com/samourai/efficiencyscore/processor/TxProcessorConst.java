@@ -157,4 +157,7 @@ public class TxProcessorConst {
     public static Double getNbCmbnPrfctCj(int nbIns, int nbOuts) { //TODO static
         return NB_CMBN_PRFCT_CJ.get(nbIns+"_"+nbOuts);
     }
+
+    public static final String MARKER_INPUT = "I";
+    public static final String MARKER_OUTPUT = "O";
 }

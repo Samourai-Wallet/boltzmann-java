@@ -5,6 +5,7 @@ import com.samourai.efficiencyscore.aggregator.TxosAggregatesMatches;
 import com.samourai.efficiencyscore.aggregator.TxosAggregator;
 import com.samourai.efficiencyscore.aggregator.TxosAggregatorResult;
 import com.samourai.efficiencyscore.beans.Txos;
+import com.samourai.efficiencyscore.processor.TxProcessorConst;
 import com.samourai.efficiencyscore.utils.ListsUtils;
 
 import java.util.*;
@@ -22,12 +23,12 @@ public class TxosLinker {
 
     // Markers
     private static final String MARKER_FEES = "FEES";
-    public static final String MARKER_PACK = "PACK"; //TODO private
+    private static final String MARKER_PACK = "PACK_I";
 
     private Txos txos;
 
-    // IntraFees associated to the transaction
-    private int _orig_fees; // TODO?
+    // fees associated to the transaction
+    private int feesOrig;
     private int fees;
 
     private List<Pack> packs = new ArrayList<>();
@@ -47,7 +48,7 @@ public class TxosLinker {
      */
     public TxosLinker(Txos txos, int fees, int maxDuration, int maxTxos) {
         this.txos = txos;
-        this._orig_fees = fees;
+        this.feesOrig = fees;
         this.maxDuration = maxDuration;
         this.maxTxos = maxTxos;
     }
@@ -69,14 +70,14 @@ public class TxosLinker {
         }
 
         // Manages fees
-        if (options.contains(TxosLinkerOptionEnum.MERGE_FEES) && this._orig_fees > 0) {
+        if (options.contains(TxosLinkerOptionEnum.MERGE_FEES) && this.feesOrig > 0) {
             // Manages fees as an additional output (case of sharedsend by blockchain.info).
             // Allows to reduce the volume of computations to be done.
             this.fees = 0;
-            this.txos.getOutputs().put(MARKER_FEES, this._orig_fees);
+            this.txos.getOutputs().put(MARKER_FEES, this.feesOrig);
         }
         else {
-            this.fees = this._orig_fees;
+            this.fees = this.feesOrig;
         }
 
         TxosAggregator aggregator = new TxosAggregator();
@@ -122,8 +123,8 @@ public class TxosLinker {
 
                 List<Set<String>> dtrmCoordsList = dtrmLnks.stream().map(array -> {
                     Set<String> set = new LinkedHashSet<>();
-                    set.add("O" + array[0]); // TODO constant TODO verify
-                    set.add("I" + array[1]); // TODO constant TODO verify
+                    set.add(TxProcessorConst.MARKER_OUTPUT + array[0]); // TODO verify
+                    set.add(TxProcessorConst.MARKER_INPUT + array[1]);
                     return set;
                 }).collect(Collectors.toList());
                 packedTxos = packLinkedTxos(dtrmCoordsList, txos);
@@ -209,7 +210,7 @@ public class TxosLinker {
             int valIns = 0;
 
             for (String inPack : pack) {
-                if (inPack.startsWith("I")) {// TODO clean
+                if (inPack.startsWith(TxProcessorConst.MARKER_INPUT)) {
                     ins.add(inPack);
                     valIns += packedTxos.getInputs().get(inPack);
                     packedTxos.getInputs().remove(inPack);
@@ -218,7 +219,7 @@ public class TxosLinker {
             idx++;
 
             if (!ins.isEmpty()) {
-                String lbl = MARKER_PACK+"_I"+idx;
+                String lbl = MARKER_PACK+idx;
                 packedTxos.getInputs().put(lbl, valIns);
                 packs.add(new Pack(lbl, valIns, PackType.INPUTS, ins, new ArrayList<>()));
             }
