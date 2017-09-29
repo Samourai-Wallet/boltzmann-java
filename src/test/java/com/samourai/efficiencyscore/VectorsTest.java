@@ -28,10 +28,10 @@ public class VectorsTest {
         inputs.put("1JDHTo412L9RCtuGbYw4MBeL1xn7ZTuzLH", 1380000);
 
         outputs = new LinkedHashMap<>();
-        outputs.put("18JNSFk8eRZcM8RdqLDSgCiipgnfAYsFef", 9850000);
-        outputs.put("1PA1eHufj8axDWEbYfPtL8HXfA66gTFsFc", 1270000);
         outputs.put("1JR3x2xNfeFicqJcvzz1gkEhHEewJBb5Zb", 100000);
+        outputs.put("18JNSFk8eRZcM8RdqLDSgCiipgnfAYsFef", 9850000);
         outputs.put("1ALKUqxRb2MeFqomLCqeYwDZK6FvLNnP3H", 100000);
+        outputs.put("1PA1eHufj8axDWEbYfPtL8HXfA66gTFsFc", 1270000);
 
         int nbCmbn = 3;
         int[][] matLnk = new int[][]{{3, 1}, {1, 3}, {2, 2}, {2, 2}};
