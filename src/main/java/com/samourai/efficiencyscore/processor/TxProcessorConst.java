@@ -154,7 +154,7 @@ public class TxProcessorConst {
         NB_CMBN_PRFCT_CJ.put("20_40", 179118764893591294336673190395872233272069208338.0);
     }
 
-    public static Double getNbCmbnPrfctCj(int nbIns, int nbOuts) { //TODO static
+    public static Double getNbCmbnPrfctCj(int nbIns, int nbOuts) {
         return NB_CMBN_PRFCT_CJ.get(nbIns+"_"+nbOuts);
     }
 

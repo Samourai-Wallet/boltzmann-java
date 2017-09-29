@@ -342,48 +342,7 @@ public class TxProcessor {
             return TxProcessorConst.getNbCmbnPrfctCj(nbIns,nbOuts);
         }
 
-        // Initializes the total number of combinations for the tx
-        int nbCmbn = 0;
-
-        // Computes the ratio between #outputs and #inputs
-        float ratioOutsIns = nbOuts / nbIns;
-
-
-        // Iterates over partioning of inputs in k_i parts
-        for (int ki=1; ki<nbIns+1; ki++) {
-            int partsKi = bell(nbIns, ki);
-
-            int coeffMonoimial = partsKi;
-            // TODO IMPLEMENT
-        }
-        return null; // TODO IMPLEMENT
+        return null; // not supported
     }
-
-    // number of partitions of a set with n elements into k subsets
-    // Returns count of different partitions of n elements in k subsets
-    // http://www.geeksforgeeks.org/count-number-of-ways-to-partition-a-set-into-k-subsets/
-    private int bell(int n, int k)
-    {
-        // Table to store results of subproblems
-        int dp[][] = new int[n+1][Math.max(n+1,k+1)];
-
-        // Base cases
-        for (int i=0; i<=n; i++)
-            dp[i][0] = 0;
-        for (int i=0; i<=k; i++)
-            dp[0][k] = 0;
-
-        // Fill rest of the entries in dp[][]
-        // in bottom up manner
-        for (int i=1; i<=n; i++)
-            for (int j=1; j<=i; j++)
-                if (j == 1 || i == j) {
-                    dp[i][j] = 1;}
-                else
-                    dp[i][j] = j*dp[i-1][j] + dp[i-1][j-1];
-
-        return dp[n][k];
-    }
-
 
 }
