@@ -104,7 +104,7 @@ public class TxProcessor {
 
         Map<String, Integer> txoIns = postProcessTxos(result.getTxos().getInputs(), filteredIns.getMapIdAddr());
         Map<String, Integer> txoOuts = postProcessTxos(result.getTxos().getOutputs(), filteredOuts.getMapIdAddr());
-        return new TxProcessorResult(result.getNbCmbn(), result.getMatLnk(), result.getDtrmLnks(), new Txos(txoIns, txoOuts), fees, intraFees, efficiency);
+        return new TxProcessorResult(result.getNbCmbn(), result.getMatLnkCombinations(), result.computeMatLnkProbabilities(), result.getDtrmLnks(), new Txos(txoIns, txoOuts), fees, intraFees, efficiency);
     }
 
     /**

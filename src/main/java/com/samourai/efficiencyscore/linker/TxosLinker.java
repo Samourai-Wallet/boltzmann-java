@@ -142,7 +142,7 @@ public class TxosLinker {
             // Builds the linkability matrix
             TxosAggregatorResult result = aggregator.computeLinkMatrix(txos, allAgg, aggMatches, matInAggCmbn, maxDuration);
             nbCmbn = result.getNbCmbn();
-            matLnk = result.getMatLnk();
+            matLnk = result.getMatLnkCombinations();
 
             // Refresh deterministical links
             dtrmLnks = aggregator.findDtrmLinks(matLnk, nbCmbn);

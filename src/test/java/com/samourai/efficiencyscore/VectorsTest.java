@@ -32,7 +32,8 @@ public class VectorsTest {
         outputs.put("1PA1eHufj8axDWEbYfPtL8HXfA66gTFsFc", 1270000);
 
         int nbCmbn = 3;
-        int[][] matLnk = new int[][]{{3, 1}, {1, 3}, {2, 2}, {2, 2}};
+        int[][] matLnkCombinations = new int[][]{{3, 1}, {1, 3}, {2, 2}, {2, 2}};
+        double[][] matLnkProbabilities = new double[][]{{1, 0.3333333333333333}, {0.3333333333333333, 1}, {0.6666666666666666, 0.6666666666666666}, {0.6666666666666666, 0.6666666666666666}};
         String[][] expectedReadableDtrmLnks = new String[][]{
                 {"18JNSFk8eRZcM8RdqLDSgCiipgnfAYsFef", "1FJNUgMPRyBx6ahPmsH6jiYZHDWBPEHfU7"},
                 {"1PA1eHufj8axDWEbYfPtL8HXfA66gTFsFc", "1JDHTo412L9RCtuGbYw4MBeL1xn7ZTuzLH"}
@@ -43,12 +44,12 @@ public class VectorsTest {
         TxProcessorSettings settings = new TxProcessorSettings();
         settings.setMaxCjIntrafeesRatio(0);
         IntraFees intraFees = new IntraFees(0, 0);
-        TxProcessorResult expected = new TxProcessorResult(nbCmbn, matLnk, null, new Txos(inputs, outputs), fees, intraFees, efficiency);
+        TxProcessorResult expected = new TxProcessorResult(nbCmbn, matLnkCombinations, matLnkProbabilities, null, new Txos(inputs, outputs), fees, intraFees, efficiency);
         processTest(inputs, outputs, settings, expected, expectedReadableDtrmLnks);
 
         settings.setMaxCjIntrafeesRatio(0.005f);
         intraFees = new IntraFees(500, 500);
-        expected = new TxProcessorResult(nbCmbn, matLnk, null, new Txos(inputs, outputs), fees, intraFees, efficiency);
+        expected = new TxProcessorResult(nbCmbn, matLnkCombinations,  matLnkProbabilities, null, new Txos(inputs, outputs), fees, intraFees, efficiency);
         processTest(inputs, outputs, settings, expected, expectedReadableDtrmLnks);
 
         // TODO more tests
@@ -71,9 +72,8 @@ public class VectorsTest {
         System.out.println("Duration = "+ (System.currentTimeMillis() - t1)+"ms");
 
         Assert.assertEquals(expected.getNbCmbn(), result.getNbCmbn());
-        System.out.println(Arrays.deepToString(expected.getMatLnk()));
-        System.out.println(Arrays.deepToString(result.getMatLnk()));
-        Assert.assertTrue(Arrays.deepEquals(expected.getMatLnk(), result.getMatLnk()));
+        Assert.assertTrue(Arrays.deepEquals(expected.getMatLnkCombinations(), result.getMatLnkCombinations()));
+        Assert.assertTrue(Arrays.deepEquals(expected.getMatLnkProbabilities(), result.getMatLnkProbabilities()));
         Assert.assertTrue(Arrays.deepEquals(expectedReadableDtrmLnks, client.replaceDtrmLinks(result.getDtrmLnks(), result.getTxos())));
 
         Assert.assertTrue(Maps.difference(expected.getTxos().getInputs(), result.getTxos().getInputs()).areEqual());

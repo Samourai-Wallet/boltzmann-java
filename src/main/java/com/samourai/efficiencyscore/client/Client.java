@@ -32,20 +32,19 @@ public class Client {
             System.out.println("Wallet efficiency = "+(result.getEfficiency()*100)+"% ("+ DoubleMath.log2(result.getEfficiency())+" bits)");
         }
 
-        if (result.getMatLnk() == null) {
+        if (result.getMatLnkCombinations() == null) {
             if (result.getNbCmbn() == 0) {
                 System.out.println("Skipped processing of this transaction (too many inputs and/or outputs)");
             }
         }
         else {
-            if (result.getNbCmbn() != 0) {
+            if (result.getMatLnkProbabilities() != null) {
                 System.out.println("Linkability Matrix (probabilities) :");
-                Object[] matProb = Arrays.stream(result.getMatLnk()).map(line -> Arrays.stream(line).mapToDouble(val -> (new Double(val)/result.getNbCmbn())).toArray()).toArray();
-                System.out.println(Arrays.deepToString(matProb));
+                System.out.println(Arrays.deepToString(result.getMatLnkProbabilities()));
             }
             else {
                 System.out.println("Linkability Matrix (#combinations with link) :");
-                System.out.println(Arrays.deepToString(result.getMatLnk()));
+                System.out.println(Arrays.deepToString(result.getMatLnkCombinations()));
             }
         }
 
