@@ -7,6 +7,7 @@ import com.samourai.efficiencyscore.beans.Tx;
 import com.samourai.efficiencyscore.processor.TxProcessor;
 import com.samourai.efficiencyscore.processor.TxProcessorResult;
 import com.samourai.efficiencyscore.beans.Txos;
+import com.samourai.efficiencyscore.processor.TxProcessorSettings;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -17,12 +18,9 @@ public class VectorsTest {
 
     @Test
     public void test() {
+        // 8e56317360a548e8ef28ec475878ef70d1371bee3526c017ac22ad61ae5740b8
         Map<String, Integer> inputs;
         Map<String, Integer> outputs;
-        TxosLinkerOptionEnum[] options = new TxosLinkerOptionEnum[]{TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY, TxosLinkerOptionEnum.MERGE_INPUTS};
-        int maxDuration = 600; //TODO defaults
-        int maxTxos = 12; //TODO defaults
-
         inputs = new LinkedHashMap<>();
         inputs.put("1FJNUgMPRyBx6ahPmsH6jiYZHDWBPEHfU7", 10000000);
         inputs.put("1JDHTo412L9RCtuGbYw4MBeL1xn7ZTuzLH", 1380000);
@@ -42,20 +40,21 @@ public class VectorsTest {
         int fees = 60000;
         Double efficiency = 0.42857142857142854;
 
-        float maxCjIntrafeesRatio = 0;
+        TxProcessorSettings settings = new TxProcessorSettings();
+        settings.setMaxCjIntrafeesRatio(0);
         IntraFees intraFees = new IntraFees(0, 0);
         TxProcessorResult expected = new TxProcessorResult(nbCmbn, matLnk, null, new Txos(inputs, outputs), fees, intraFees, efficiency);
-        processTest(inputs, outputs, options, maxDuration, maxTxos, maxCjIntrafeesRatio, expected, expectedReadableDtrmLnks);
+        processTest(inputs, outputs, settings, expected, expectedReadableDtrmLnks);
 
-        maxCjIntrafeesRatio = 0.005f;
+        settings.setMaxCjIntrafeesRatio(0.005f);
         intraFees = new IntraFees(500, 500);
         expected = new TxProcessorResult(nbCmbn, matLnk, null, new Txos(inputs, outputs), fees, intraFees, efficiency);
-        processTest(inputs, outputs, options, maxDuration, maxTxos, maxCjIntrafeesRatio, expected, expectedReadableDtrmLnks);
+        processTest(inputs, outputs, settings, expected, expectedReadableDtrmLnks);
 
         // TODO more tests
     }
 
-    private void processTest(Map<String, Integer> inputs, Map<String, Integer> outputs, TxosLinkerOptionEnum[] options, int maxDuration, int maxTxos, float maxCjIntrafeesRatio, TxProcessorResult expected, String[][] expectedReadableDtrmLnks) {
+    private void processTest(Map<String, Integer> inputs, Map<String, Integer> outputs, TxProcessorSettings txProcessorSettings, TxProcessorResult expected, String[][] expectedReadableDtrmLnks) {
         long t1 = System.currentTimeMillis();
         int sumInputs = inputs.values().stream().mapToInt(value -> value).sum();
         int sumOutputs = outputs.values().stream().mapToInt(value -> value).sum();
@@ -66,7 +65,7 @@ public class VectorsTest {
 
         Txos txos = new Txos(inputs, outputs);
         Tx tx = new Tx(txos);
-        TxProcessorResult result = txProcessor.processTx(tx, new HashSet<>(Arrays.asList(options)), maxDuration, maxTxos, maxCjIntrafeesRatio);
+        TxProcessorResult result = txProcessor.processTx(tx, txProcessorSettings);
         client.displayResults(result);
 
         System.out.println("Duration = "+ (System.currentTimeMillis() - t1)+"ms");

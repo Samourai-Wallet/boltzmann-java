@@ -20,13 +20,12 @@ public class TxProcessor {
     /**
      * Processes a transaction
      * @param tx Transaction to be processed
-     * @param options options to be applied during processing
-     * @param maxDuration max duration allocated to processing of a single tx (in seconds)
-     * @param maxTxos max number of txos. Txs with more than max_txos inputs or outputs are not processed.
-     * @param maxCjIntrafeesRatio max intrafees paid by the taker of a coinjoined transaction. Expressed as a percentage of the coinjoined amount.
+     * @param settings settings for processing the transaction
      * @return TxProcessorResult
      */
-    public TxProcessorResult processTx(Tx tx, Set<TxosLinkerOptionEnum> options, int maxDuration, int maxTxos, float maxCjIntrafeesRatio) {
+    public TxProcessorResult processTx(Tx tx, TxProcessorSettings settings) {
+        Set<TxosLinkerOptionEnum> options = new HashSet<>(Arrays.asList(settings.getOptions()));
+
         // Builds lists of filtered input/output txos (with generated ids)
         FilteredTxos filteredIns = filterTxos(tx.getTxos().getInputs(), TxProcessorConst.MARKER_INPUT);
         FilteredTxos filteredOuts = filterTxos(tx.getTxos().getOutputs(), TxProcessorConst.MARKER_OUTPUT);
@@ -51,7 +50,7 @@ public class TxProcessor {
         else {
             // Initializes the TxosLinker for this tx
             Txos filteredTxos = new Txos(filteredIns.getTxos(), filteredOuts.getTxos());
-            TxosLinker linker = new TxosLinker(filteredTxos, fees, maxDuration, maxTxos);
+            TxosLinker linker = new TxosLinker(filteredTxos, fees, settings.getMaxDuration(), settings.getMaxTxos());
 
             // Computes a list of sets of inputs controlled by a same address
             List<Set<String>> linkedIns = new ArrayList<>();
@@ -68,7 +67,7 @@ public class TxProcessor {
             }
 
             // Computes intrafees to be used during processing
-            if (maxCjIntrafeesRatio > 0) {
+            if (settings.getMaxCjIntrafeesRatio() > 0) {
                 // Computes a theoretic max number of participants
                 List<Set<String>> lsFilteredIns = filteredIns.getTxos().keySet().stream().map(txoId -> {
                     Set<String> set = new LinkedHashSet<>();
@@ -87,7 +86,7 @@ public class TxProcessor {
 
                 // If coinjoin pattern detected, computes theoretic max intrafees
                 if (cjPattern != null) {
-                    intraFees = computeCoinjoinIntrafees(cjPattern.getNbPtcpts(), cjPattern.getCjAmount(), maxCjIntrafeesRatio);
+                    intraFees = computeCoinjoinIntrafees(cjPattern.getNbPtcpts(), cjPattern.getCjAmount(), settings.getMaxCjIntrafeesRatio());
                 }
             }
 
