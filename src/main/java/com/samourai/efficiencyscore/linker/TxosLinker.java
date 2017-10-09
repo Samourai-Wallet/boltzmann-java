@@ -132,9 +132,9 @@ public class TxosLinker {
             }
 
             // Prepares data
-            TxosAggregates allAgg = aggregator.prepareData(txos); // TODO optimize repetition
-            txos = new Txos(allAgg.getInAgg().getTxos(), allAgg.getOutAgg().getTxos()); // TODO optimize repetition
-            TxosAggregatesMatches aggMatches = aggregator.matchAggByVal(allAgg, fees, intraFees); // TODO optimize repetition
+            TxosAggregates allAgg = aggregator.prepareData(txos);
+            txos = new Txos(allAgg.getInAgg().getTxos(), allAgg.getOutAgg().getTxos());
+            TxosAggregatesMatches aggMatches = aggregator.matchAggByVal(allAgg, fees, intraFees);
 
             // Computes a matrix storing a tree composed of valid pairs of input aggregates
             Map<Integer,List<int[]>> matInAggCmbn = aggregator.computeInAggCmbn(aggMatches);

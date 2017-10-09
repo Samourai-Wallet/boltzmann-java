@@ -35,7 +35,7 @@ public class ListsUtils {
             }
             tmp_sets = res;
         }
-        return tmp_sets; // TODO OPTIMIZE (union-find disjoint)
+        return tmp_sets;
     }
 
     public static int[][] powerSet(Integer[] a) {
