@@ -17,49 +17,87 @@ public class VectorsTest {
     private Client client = new Client();
 
     @Test
-    public void test() {
-        // 8e56317360a548e8ef28ec475878ef70d1371bee3526c017ac22ad61ae5740b8
-        Map<String, Integer> inputs;
-        Map<String, Integer> outputs;
-        inputs = new LinkedHashMap<>();
-        inputs.put("1FJNUgMPRyBx6ahPmsH6jiYZHDWBPEHfU7", 10000000);
-        inputs.put("1JDHTo412L9RCtuGbYw4MBeL1xn7ZTuzLH", 1380000);
+    public void testProcess_basicPaymentTransaction_inputPacking_dcba20fdfe34fe240fa6eacccfb2e58468ba2feafcfff99706145800d09a09a6() {
+        Map<String, Long> inputs = new LinkedHashMap<>();
+        inputs.put("1QAHGtVG5EXbs1n7BuhyNKr7DGMWQWKHgS", 5300000000L);
+        inputs.put("1DV9k4MzaHSHkhNMxHCjKQuXUwZXPUxEwG", 2020000000L);
+        inputs.put("1NaNy4UwTGrRcvuufHsVWj1KWGEc3PEk9K", 4975000000L);
+        inputs.put("16h7kaoG82k8DFhUgodf4BozYSA5zLNRma", 5000000000L);
+        inputs.put("16boodvrd8PVSGPmtB87PD9XfsJzwaMh3T", 5556000000L);
+        inputs.put("1KVry787zTL42uZinmpyqW9umC4PbKxPCa", 7150000000L);
 
-        outputs = new LinkedHashMap<>();
-        outputs.put("1JR3x2xNfeFicqJcvzz1gkEhHEewJBb5Zb", 100000);
-        outputs.put("18JNSFk8eRZcM8RdqLDSgCiipgnfAYsFef", 9850000);
-        outputs.put("1ALKUqxRb2MeFqomLCqeYwDZK6FvLNnP3H", 100000);
-        outputs.put("1PA1eHufj8axDWEbYfPtL8HXfA66gTFsFc", 1270000);
+        Map<String, Long> outputs = new LinkedHashMap<>();
+        outputs.put("1ABoCkCDm7RVwzuapb1TALDNaEDSvP91D8", 1000000L);
+        outputs.put("1BPUHdEzaJLz9VBT2d3hivSYEJALHmzrGa", 30000000000L);
+
+        int nbCmbn = 1;
+        int[][] matLnkCombinations = new int[][]{{1, 1, 1, 1, 1, 1}, {1, 1, 1, 1, 1, 1}};
+        double[][] matLnkProbabilities = new double[][]{{1, 1, 1, 1, 1, 1}, {1, 1, 1, 1, 1, 1}};
+        double entropy = 0;
+        String[][] expectedReadableDtrmLnks = new String[][]{
+                {"1BPUHdEzaJLz9VBT2d3hivSYEJALHmzrGa", "16boodvrd8PVSGPmtB87PD9XfsJzwaMh3T"},
+                {"1BPUHdEzaJLz9VBT2d3hivSYEJALHmzrGa", "1QAHGtVG5EXbs1n7BuhyNKr7DGMWQWKHgS"},
+                {"1BPUHdEzaJLz9VBT2d3hivSYEJALHmzrGa", "1KVry787zTL42uZinmpyqW9umC4PbKxPCa"},
+                {"1BPUHdEzaJLz9VBT2d3hivSYEJALHmzrGa", "1DV9k4MzaHSHkhNMxHCjKQuXUwZXPUxEwG"},
+                {"1BPUHdEzaJLz9VBT2d3hivSYEJALHmzrGa", "1NaNy4UwTGrRcvuufHsVWj1KWGEc3PEk9K"},
+                {"1BPUHdEzaJLz9VBT2d3hivSYEJALHmzrGa", "16h7kaoG82k8DFhUgodf4BozYSA5zLNRma"},
+                {"1ABoCkCDm7RVwzuapb1TALDNaEDSvP91D8", "16boodvrd8PVSGPmtB87PD9XfsJzwaMh3T"},
+                {"1ABoCkCDm7RVwzuapb1TALDNaEDSvP91D8", "1QAHGtVG5EXbs1n7BuhyNKr7DGMWQWKHgS"},
+                {"1ABoCkCDm7RVwzuapb1TALDNaEDSvP91D8", "1KVry787zTL42uZinmpyqW9umC4PbKxPCa"},
+                {"1ABoCkCDm7RVwzuapb1TALDNaEDSvP91D8", "1DV9k4MzaHSHkhNMxHCjKQuXUwZXPUxEwG"},
+                {"1ABoCkCDm7RVwzuapb1TALDNaEDSvP91D8", "1NaNy4UwTGrRcvuufHsVWj1KWGEc3PEk9K"},
+                {"1ABoCkCDm7RVwzuapb1TALDNaEDSvP91D8", "16h7kaoG82k8DFhUgodf4BozYSA5zLNRma"}
+        };
+        long fees = 0;
+        Double efficiency = 0.0;
+
+        TxProcessorSettings settings = new TxProcessorSettings();
+        settings.setMaxCjIntrafeesRatio(0);
+        IntraFees intraFees = new IntraFees(0, 0);
+        TxProcessorResult expected = new TxProcessorResult(nbCmbn, matLnkCombinations, matLnkProbabilities, entropy, null, new Txos(inputs, outputs), fees, intraFees, efficiency);
+        processTest(inputs, outputs, settings, expected, expectedReadableDtrmLnks);
+    }
+
+    @Test
+    public void testProcess_cj_8e56317360a548e8ef28ec475878ef70d1371bee3526c017ac22ad61ae5740b8() {
+        Map<String, Long> inputs = new LinkedHashMap<>();
+        inputs.put("1FJNUgMPRyBx6ahPmsH6jiYZHDWBPEHfU7", 10000000L);
+        inputs.put("1JDHTo412L9RCtuGbYw4MBeL1xn7ZTuzLH", 1380000L);
+
+        Map<String, Long> outputs = new LinkedHashMap<>();
+        outputs.put("1JR3x2xNfeFicqJcvzz1gkEhHEewJBb5Zb", 100000L);
+        outputs.put("18JNSFk8eRZcM8RdqLDSgCiipgnfAYsFef", 9850000L);
+        outputs.put("1ALKUqxRb2MeFqomLCqeYwDZK6FvLNnP3H", 100000L);
+        outputs.put("1PA1eHufj8axDWEbYfPtL8HXfA66gTFsFc", 1270000L);
 
         int nbCmbn = 3;
         int[][] matLnkCombinations = new int[][]{{3, 1}, {1, 3}, {2, 2}, {2, 2}};
         double[][] matLnkProbabilities = new double[][]{{1, 0.3333333333333333}, {0.3333333333333333, 1}, {0.6666666666666666, 0.6666666666666666}, {0.6666666666666666, 0.6666666666666666}};
+        double entropy = 0;
         String[][] expectedReadableDtrmLnks = new String[][]{
                 {"18JNSFk8eRZcM8RdqLDSgCiipgnfAYsFef", "1FJNUgMPRyBx6ahPmsH6jiYZHDWBPEHfU7"},
                 {"1PA1eHufj8axDWEbYfPtL8HXfA66gTFsFc", "1JDHTo412L9RCtuGbYw4MBeL1xn7ZTuzLH"}
         };
-        int fees = 60000;
+        long fees = 60000;
         Double efficiency = 0.42857142857142854;
 
         TxProcessorSettings settings = new TxProcessorSettings();
         settings.setMaxCjIntrafeesRatio(0);
         IntraFees intraFees = new IntraFees(0, 0);
-        TxProcessorResult expected = new TxProcessorResult(nbCmbn, matLnkCombinations, matLnkProbabilities, null, new Txos(inputs, outputs), fees, intraFees, efficiency);
+        TxProcessorResult expected = new TxProcessorResult(nbCmbn, matLnkCombinations, matLnkProbabilities, entropy, null, new Txos(inputs, outputs), fees, intraFees, efficiency);
         processTest(inputs, outputs, settings, expected, expectedReadableDtrmLnks);
 
         settings.setMaxCjIntrafeesRatio(0.005f);
         intraFees = new IntraFees(500, 500);
-        expected = new TxProcessorResult(nbCmbn, matLnkCombinations,  matLnkProbabilities, null, new Txos(inputs, outputs), fees, intraFees, efficiency);
+        expected = new TxProcessorResult(nbCmbn, matLnkCombinations,  matLnkProbabilities, entropy, null, new Txos(inputs, outputs), fees, intraFees, efficiency);
         processTest(inputs, outputs, settings, expected, expectedReadableDtrmLnks);
-
-        // TODO more tests
     }
 
-    private void processTest(Map<String, Integer> inputs, Map<String, Integer> outputs, TxProcessorSettings txProcessorSettings, TxProcessorResult expected, String[][] expectedReadableDtrmLnks) {
+    private void processTest(Map<String, Long> inputs, Map<String, Long> outputs, TxProcessorSettings txProcessorSettings, TxProcessorResult expected, String[][] expectedReadableDtrmLnks) {
         long t1 = System.currentTimeMillis();
-        int sumInputs = inputs.values().stream().mapToInt(value -> value).sum();
-        int sumOutputs = outputs.values().stream().mapToInt(value -> value).sum();
-        int fees = sumInputs - sumOutputs;
+        long sumInputs = inputs.values().stream().mapToLong(value -> value).sum();
+        long sumOutputs = outputs.values().stream().mapToLong(value -> value).sum();
+        long fees = sumInputs - sumOutputs;
         System.out.println("fees = "+fees);
 
         TxProcessor txProcessor = new TxProcessor();
