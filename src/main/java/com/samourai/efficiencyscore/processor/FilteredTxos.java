@@ -5,17 +5,17 @@ import java.util.Map;
 public class FilteredTxos {
 
     // Txos txo ids to amounts
-    private Map<String, Integer> txos;
+    private Map<String, Long> txos;
 
     // Mapping txo ids to bitcoin addresses
     private Map<String, String> mapIdAddr;
 
-    public FilteredTxos(Map<String, Integer> txos, Map<String, String> mapIdAddr) {
+    public FilteredTxos(Map<String, Long> txos, Map<String, String> mapIdAddr) {
         this.txos = txos;
         this.mapIdAddr = mapIdAddr;
     }
 
-    public Map<String, Integer> getTxos() {
+    public Map<String, Long> getTxos() {
         return txos;
     }
 

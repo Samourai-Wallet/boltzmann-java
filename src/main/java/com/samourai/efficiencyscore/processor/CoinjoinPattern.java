@@ -3,9 +3,9 @@ package com.samourai.efficiencyscore.processor;
 public class CoinjoinPattern {
 
     private int nbPtcpts;
-    private int cjAmount;
+    private long cjAmount;
 
-    public CoinjoinPattern(int nbPtcpts, int cjAmount) {
+    public CoinjoinPattern(int nbPtcpts, long cjAmount) {
         this.nbPtcpts = nbPtcpts;
         this.cjAmount = cjAmount;
     }
@@ -14,7 +14,7 @@ public class CoinjoinPattern {
         return nbPtcpts;
     }
 
-    public int getCjAmount() {
+    public long getCjAmount() {
         return cjAmount;
     }
 }

@@ -2,21 +2,21 @@ package com.samourai.efficiencyscore.linker;
 
 public class IntraFees {
 
-    private int feesMaker;
-    private int feesTaker;
+    private long feesMaker;
+    private long feesTaker;
     private boolean hasFees;
 
-    public IntraFees(int feesMaker, int feesTaker) {
+    public IntraFees(long feesMaker, long feesTaker) {
         this.feesMaker = feesMaker;
         this.feesTaker = feesTaker;
         hasFees = (feesMaker>0 || feesTaker>0);
     }
 
-    public int getFeesMaker() {
+    public long getFeesMaker() {
         return feesMaker;
     }
 
-    public int getFeesTaker() {
+    public long getFeesTaker() {
         return feesTaker;
     }
 

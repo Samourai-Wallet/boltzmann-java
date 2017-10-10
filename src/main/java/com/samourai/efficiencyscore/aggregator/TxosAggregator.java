@@ -29,26 +29,26 @@ public class TxosAggregator {
     array of aggregates (combinations of txos) in binary format
     array of values associated to the aggregates
      */
-    public TxosAggregatesData prepareTxos(Map<String, Integer> txos) {
+    public TxosAggregatesData prepareTxos(Map<String, Long> txos) {
         txos = txos.entrySet().stream()
                 // Removes txos with null value
                 .filter(x -> x.getValue() > 0)
 
                 // Orders txos by decreasing value
-                .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+                .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
 
                 // Creates a 1D array of values
                 .collect(Collectors.toMap(x -> x.getKey(), x -> x.getValue(), (u,v) -> { throw new IllegalStateException(String.format("Duplicate key %s", u)); }, LinkedHashMap::new));
 
 
         // Creates a 1D array of values
-        Integer[] allVal = txos.values().toArray(new Integer[]{});
+        Long[] allVal = txos.values().toArray(new Long[]{});
         Integer[] allIndexes = IntStream.range(0, txos.size()).boxed().toArray(Integer[]::new);
 
         ////int[][] allAgg = ListsUtils.powerSet(allVal);
         int[][] allAggIndexes = ListsUtils.powerSet(allIndexes);
         //int[] allAggVal = Arrays.stream(allAgg).mapToInt(array -> Arrays.stream(array).sum()).toArray();
-        int[] allAggVal = Arrays.stream(allAggIndexes).mapToInt(array -> Arrays.stream(array).map(indice -> allVal[indice]).sum()).toArray();
+        long[] allAggVal = Arrays.stream(allAggIndexes).mapToLong(array -> Arrays.stream(array).mapToLong(indice -> allVal[indice]).sum()).toArray();
         return new TxosAggregatesData(txos, allAggIndexes, allAggVal);
     }
 
@@ -59,20 +59,20 @@ public class TxosAggregator {
      * @param intraFees
      * @return
      */
-    public TxosAggregatesMatches matchAggByVal(TxosAggregates allAgg, int fees, IntraFees intraFees) {
-        int[] allInAggVal = allAgg.getInAgg().getAllAggVal();
-        int[] allOutAggVal = allAgg.getOutAgg().getAllAggVal();
+    public TxosAggregatesMatches matchAggByVal(TxosAggregates allAgg, long fees, IntraFees intraFees) {
+        long[] allInAggVal = allAgg.getInAgg().getAllAggVal();
+        long[] allOutAggVal = allAgg.getOutAgg().getAllAggVal();
 
         // Gets unique values of input / output aggregates sorted ASC
-        int[] allUniqueInAggVal = Arrays.stream(allInAggVal).distinct().sorted().toArray();
-        int[] allUniqueOutAggVal = Arrays.stream(allOutAggVal).distinct().sorted().toArray();
+        long[] allUniqueInAggVal = Arrays.stream(allInAggVal).distinct().sorted().toArray();
+        long[] allUniqueOutAggVal = Arrays.stream(allOutAggVal).distinct().sorted().toArray();
 
         Set<Integer> allMatchInAgg = new LinkedHashSet<>();
-        Map<Integer, Integer> matchInAggToVal = new LinkedHashMap<>();
-        Map<Integer, int[]> valToMatchOutAgg = new LinkedHashMap<>();
+        Map<Integer, Long> matchInAggToVal = new LinkedHashMap<>();
+        Map<Long, int[]> valToMatchOutAgg = new LinkedHashMap<>();
 
         // Computes total fees paid/receiver by taker/maker
-        int feesTaker=0, feesMaker=0;
+        long feesTaker=0, feesMaker=0;
         boolean hasIntraFees = intraFees !=null && intraFees.hasFees();
         if (hasIntraFees) {
             feesTaker = fees + intraFees.getFeesTaker();
@@ -81,11 +81,11 @@ public class TxosAggregator {
 
         // Finds input and output aggregates with matching values
         for(int i=0; i<allUniqueInAggVal.length; i++) {
-            int inAggVal = allUniqueInAggVal[i];
+            long inAggVal = allUniqueInAggVal[i];
             for(int j=0; j<allUniqueOutAggVal.length; j++) {
-                int outAggVal = allUniqueOutAggVal[j];
+                long outAggVal = allUniqueOutAggVal[j];
 
-                int diff = inAggVal - outAggVal;
+                long diff = inAggVal - outAggVal;
 
                 if (!hasIntraFees && diff < 0) {
                     break;
@@ -127,20 +127,22 @@ public class TxosAggregator {
         LinkedList<Integer> aggs = new LinkedList<>(aggMatches.getAllMatchInAgg());
         aggs.pollFirst(); // remove 0
 
-        int tgt = aggs.pollLast();
-        Map<Integer,List<int[]>> mat = new LinkedHashMap<>();
+        Map<Integer, List<int[]>> mat = new LinkedHashMap<>();
+        if (!aggs.isEmpty()) {
+            int tgt = aggs.pollLast();
 
-        for (int i=0; i<tgt+1; i++) {
-            if (aggs.contains(i)) {
-                int jMax = Math.min(i, tgt-i+1);
-                for (int j=0; j<jMax; j++) {
-                    if ((i & j) == 0 && aggs.contains(j)) {
-                        List<int[]> aggChilds = mat.get(i+j);
-                        if (aggChilds == null) {
-                            aggChilds = new ArrayList<>();
-                            mat.put(i+j, aggChilds);
+            for (int i = 0; i < tgt + 1; i++) {
+                if (aggs.contains(i)) {
+                    int jMax = Math.min(i, tgt - i + 1);
+                    for (int j = 0; j < jMax; j++) {
+                        if ((i & j) == 0 && aggs.contains(j)) {
+                            List<int[]> aggChilds = mat.get(i + j);
+                            if (aggChilds == null) {
+                                aggChilds = new ArrayList<>();
+                                mat.put(i + j, aggChilds);
+                            }
+                            aggChilds.add(new int[]{i, j});
                         }
-                        aggChilds.add(new int[]{i,j});
                     }
                 }
             }
@@ -158,9 +160,9 @@ public class TxosAggregator {
 
         int[][] matCmbn = new int[nbOuts][nbIns];
         int[] inCmbn = new int[nbIns];
-        for (Map.Entry<Integer,Integer> inEntry : aggMatches.getMatchInAggToVal().entrySet()) {
+        for (Map.Entry<Integer,Long> inEntry : aggMatches.getMatchInAggToVal().entrySet()) {
             int inIdx = inEntry.getKey();
-            int val = inEntry.getValue();
+            long val = inEntry.getValue();
             for (int outIdx : aggMatches.getValToMatchOutAgg().get(val)) {
                 // Computes a matrix storing numbers of raw combinations matching input/output pairs
                 updateLinkCmbn(matCmbn, inIdx, outIdx, allAgg);
@@ -285,7 +287,7 @@ public class TxosAggregator {
                         int nbPrt = oREntry.getValue().values().stream().mapToInt(s -> s[0]).sum();
 
                         // Iterates over output sub-aggregates matching with left input sub-aggregate
-                        int valIl = aggMatches.getMatchInAggToVal().get(nIl);
+                        long valIl = aggMatches.getMatchInAggToVal().get(nIl);
                         for (int nOl : aggMatches.getValToMatchOutAgg().get(valIl)) {
                             // Checks compatibility of output sub-aggregate with left part of output combination
                             if ((sol & nOl) == 0) {
@@ -296,7 +298,7 @@ public class TxosAggregator {
                                 int nOr = otGt - nSol;
 
                                 // Checks if the right output sub-aggregate is valid
-                                int valIr = aggMatches.getMatchInAggToVal().get(nIr);
+                                long valIr = aggMatches.getMatchInAggToVal().get(nIr);
                                 int[] matchOutAgg = aggMatches.getValToMatchOutAgg().get(valIr);
 
                                 // Adds this output combination into n_d_out if all conditions met

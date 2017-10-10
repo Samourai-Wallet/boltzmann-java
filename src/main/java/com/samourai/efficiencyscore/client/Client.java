@@ -24,8 +24,8 @@ public class Client {
         }
 
         System.out.println("Nb combinations = "+result.getNbCmbn());
-        if (result.getNbCmbn() > 0) {
-            System.out.println("Tx entropy = "+ DoubleMath.log2(result.getNbCmbn())+" bits");
+        if (result.getEntropy() != null) {
+            System.out.println("Tx entropy = "+result.getEntropy()+" bits");
         }
 
         if (result.getEfficiency() != null) {

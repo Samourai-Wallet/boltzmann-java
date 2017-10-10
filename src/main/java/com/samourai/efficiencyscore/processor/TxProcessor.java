@@ -31,9 +31,9 @@ public class TxProcessor {
         FilteredTxos filteredOuts = filterTxos(tx.getTxos().getOutputs(), TxProcessorConst.MARKER_OUTPUT);
 
         // Computes total input & output amounts + fees
-        int sumInputs = filteredIns.getTxos().values().stream().mapToInt(x -> x).sum();
-        int sumOutputs = filteredOuts.getTxos().values().stream().mapToInt(x -> x).sum();
-        int fees = sumInputs - sumOutputs;
+        long sumInputs = filteredIns.getTxos().values().stream().mapToLong(x -> x).sum();
+        long sumOutputs = filteredOuts.getTxos().values().stream().mapToLong(x -> x).sum();
+        long fees = sumInputs - sumOutputs;
 
         // Sets default intrafees paid by participants (fee_received_by_maker, fees_paid_by_taker)
         IntraFees intraFees = new IntraFees(0, 0);
@@ -50,7 +50,7 @@ public class TxProcessor {
         else {
             // Initializes the TxosLinker for this tx
             Txos filteredTxos = new Txos(filteredIns.getTxos(), filteredOuts.getTxos());
-            TxosLinker linker = new TxosLinker(filteredTxos, fees, settings.getMaxDuration(), settings.getMaxTxos());
+            TxosLinker linker = new TxosLinker(fees, settings.getMaxDuration(), settings.getMaxTxos());
 
             // Computes a list of sets of inputs controlled by a same address
             List<Set<String>> linkedIns = new ArrayList<>();
@@ -94,7 +94,7 @@ public class TxProcessor {
             Collection<Set<String>> linkedTxos = new ArrayList<>();
             linkedTxos.addAll(linkedIns);
             linkedTxos.addAll(linkedOuts);
-            result = linker.process(linkedTxos, options, intraFees);
+            result = linker.process(filteredTxos, linkedTxos, options, intraFees);
         }
 
         // Computes tx efficiency (expressed as the ratio: nb_cmbn/nb_cmbn_perfect_cj)
@@ -102,9 +102,9 @@ public class TxProcessor {
 
         // Post processes results (replaces txo ids by bitcoin addresses)
 
-        Map<String, Integer> txoIns = postProcessTxos(result.getTxos().getInputs(), filteredIns.getMapIdAddr());
-        Map<String, Integer> txoOuts = postProcessTxos(result.getTxos().getOutputs(), filteredOuts.getMapIdAddr());
-        return new TxProcessorResult(result.getNbCmbn(), result.getMatLnkCombinations(), result.computeMatLnkProbabilities(), result.getDtrmLnks(), new Txos(txoIns, txoOuts), fees, intraFees, efficiency);
+        Map<String, Long> txoIns = postProcessTxos(result.getTxos().getInputs(), filteredIns.getMapIdAddr());
+        Map<String, Long> txoOuts = postProcessTxos(result.getTxos().getOutputs(), filteredOuts.getMapIdAddr());
+        return new TxProcessorResult(result.getNbCmbn(), result.getMatLnkCombinations(), result.computeMatLnkProbabilities(), result.computeEntropy(), result.getDtrmLnks(), new Txos(txoIns, txoOuts), fees, intraFees, efficiency);
     }
 
     /**
@@ -148,8 +148,8 @@ public class TxProcessor {
      * @param prefix a prefix to be used for ids generated
      * @return FilteredTxos
      */
-    private FilteredTxos filterTxos(Map<String, Integer> txos, String prefix) {
-        Map<String, Integer> filteredTxos = new LinkedHashMap<>();
+    private FilteredTxos filterTxos(Map<String, Long> txos, String prefix) {
+        Map<String, Long> filteredTxos = new LinkedHashMap<>();
         Map<String, String> mapIdAddr = new LinkedHashMap<>();
 
         txos.entrySet().forEach(entry -> {
@@ -170,7 +170,7 @@ public class TxProcessor {
      * @param txos list of txos (tuples (txo_id, amount))
      * @param mapIdAddr mapping txo_ids to addresses
      */
-    public Map<String, Integer> postProcessTxos(Map<String, Integer> txos, Map<String,String> mapIdAddr) {
+    public Map<String, Long> postProcessTxos(Map<String, Long> txos, Map<String,String> mapIdAddr) {
         return txos.entrySet().stream().map(entry -> {
             if (entry.getKey().startsWith(TxProcessorConst.MARKER_INPUT) || entry.getKey().startsWith(TxProcessorConst.MARKER_OUTPUT)) {
                 return new AbstractMap.SimpleEntry<>(mapIdAddr.get(entry.getKey()), entry.getValue());
@@ -186,14 +186,14 @@ public class TxProcessor {
      * @param maxNbEntities estimated max number of entities participating in the coinjoin (info coming from a side channel source or from an analysis of tx structure)
      * @return CoinjoinPattern if coinjoin pattern is found, otherwise null
      */
-    protected CoinjoinPattern checkCoinjoinPattern(Map<String, Integer> txoOuts, int maxNbEntities) {
+    protected CoinjoinPattern checkCoinjoinPattern(Map<String, Long> txoOuts, int maxNbEntities) {
         // Checks that we have more than 1 input entity
         if (maxNbEntities < 2) {
             return null;
         }
 
         // Computes a dictionary of #outputs per amount (d[amount] = nb_outputs)
-        Map<Integer, Integer> nbOutsByAmount = txoOuts.entrySet().stream().collect(
+        Map<Long, Integer> nbOutsByAmount = txoOuts.entrySet().stream().collect(
                 Collectors.groupingBy(Map.Entry::getValue, Collectors.summingInt(s -> 1)) // counting as integer
         );
 
@@ -207,9 +207,9 @@ public class TxProcessor {
         // selects option with max number of participants (and max amount as 2nd criteria)
         boolean isCj = false;
         int resNbPtcpts = 0;
-        int resAmount = 0;
-        for (Map.Entry<Integer,Integer> entry : nbOutsByAmount.entrySet()) {
-            int amount = entry.getKey();
+        long resAmount = 0;
+        for (Map.Entry<Long,Integer> entry : nbOutsByAmount.entrySet()) {
+            long amount = entry.getKey();
             int nbOutsForAmount = entry.getValue();
             if (nbOutsForAmount > 1) {
                 int maxNbPtcpts = Math.min(nbOutsForAmount, maxNbEntities);
@@ -236,9 +236,9 @@ public class TxProcessor {
      * @param prctMax max percentage paid by the taker to all makers
      * @return IntraFees
      */
-    protected IntraFees computeCoinjoinIntrafees(int nbPtcpts, int cjAmount, float prctMax) {
-        int feeMaker = Math.round(cjAmount * prctMax);
-        int feeTaker = feeMaker * (nbPtcpts - 1);
+    protected IntraFees computeCoinjoinIntrafees(int nbPtcpts, long cjAmount, float prctMax) {
+        long feeMaker = Math.round(cjAmount * prctMax);
+        long feeTaker = feeMaker * (nbPtcpts - 1);
         return new IntraFees(feeMaker, feeTaker);
     }
 

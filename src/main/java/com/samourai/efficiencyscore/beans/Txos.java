@@ -1,25 +1,30 @@
 package com.samourai.efficiencyscore.beans;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class Txos {
 
     // List of input txos expressed as tuples (id, amount)
-    private Map<String, Integer> inputs;
+    private Map<String, Long> inputs;
 
     // List of output txos expressed as tuples (id, amount)
-    private Map<String, Integer> outputs;
+    private Map<String, Long> outputs;
 
-    public Txos(Map<String, Integer> inputs, Map<String, Integer> outputs) {
+    public Txos() {
+        this(new LinkedHashMap<>(), new LinkedHashMap<>());
+    }
+
+    public Txos(Map<String, Long> inputs, Map<String, Long> outputs) {
         this.inputs = inputs;
         this.outputs = outputs;
     }
 
-    public Map<String, Integer> getInputs() {
+    public Map<String, Long> getInputs() {
         return inputs;
     }
 
-    public Map<String, Integer> getOutputs() {
+    public Map<String, Long> getOutputs() {
         return outputs;
     }
 }

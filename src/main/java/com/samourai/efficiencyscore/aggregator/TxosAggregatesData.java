@@ -4,17 +4,17 @@ import java.util.Map;
 
 public class TxosAggregatesData {
 
-    private Map<String, Integer> txos;
+    private Map<String, Long> txos;
     private int[][] allAggIndexes; // each entry value contains array of txos indexes for corresponding allAggVal[entry.key]
-    private int[] allAggVal;
+    private long[] allAggVal;
 
-    public TxosAggregatesData(Map<String, Integer> txos, int[][] allAggIndexes, int[] allAggVal) {
+    public TxosAggregatesData(Map<String, Long> txos, int[][] allAggIndexes, long[] allAggVal) {
         this.txos = txos;
         this.allAggIndexes = allAggIndexes;
         this.allAggVal = allAggVal;
     }
 
-    public Map<String, Integer> getTxos() {
+    public Map<String, Long> getTxos() {
         return txos;
     }
 
@@ -22,7 +22,7 @@ public class TxosAggregatesData {
         return allAggIndexes;
     }
 
-    public int[] getAllAggVal() {
+    public long[] getAllAggVal() {
         return allAggVal;
     }
 }

@@ -1,5 +1,7 @@
 package com.samourai.efficiencyscore.aggregator;
 
+import com.google.common.math.DoubleMath;
+
 import java.util.Arrays;
 
 public class TxosAggregatorResult {
@@ -31,5 +33,13 @@ public class TxosAggregatorResult {
             matLnkProbabilities = Arrays.stream(matLnkCombinations).map(line -> Arrays.stream(line).mapToDouble(val -> (new Double(val)/nbCmbn)).toArray()).toArray(double[][]::new);
         }
         return matLnkProbabilities;
+    }
+
+    public double computeEntropy() {
+        double entropy = 0;
+        if (nbCmbn > 0) {
+            entropy = DoubleMath.log2(nbCmbn);
+        }
+        return entropy;
     }
 }
