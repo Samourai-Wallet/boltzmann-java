@@ -64,7 +64,7 @@ public class TxosLinker {
         // Packs txos known as being controlled by a same entity
         // It decreases the entropy and speeds-up computations
         if(linkedTxos!=null && !linkedTxos.isEmpty()) {
-            txos = packLinkedTxos(linkedTxos, txos); // TODO test + verif txos vs packedTxos
+            txos = packLinkedTxos(linkedTxos, txos); // TODO test
         }
 
         // Manages fees
