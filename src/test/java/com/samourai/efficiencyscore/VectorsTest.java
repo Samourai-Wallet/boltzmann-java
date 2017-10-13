@@ -57,6 +57,11 @@ public class VectorsTest {
         IntraFees intraFees = new IntraFees(0, 0);
         TxProcessorResult expected = new TxProcessorResult(nbCmbn, matLnkCombinations, matLnkProbabilities, entropy, null, new Txos(inputs, outputs), fees, intraFees, efficiency);
         processTest(inputs, outputs, settings, expected, expectedReadableDtrmLnks);
+
+        settings.setMaxCjIntrafeesRatio(0.005f);
+        intraFees = new IntraFees(0, 0);
+        expected = new TxProcessorResult(nbCmbn, matLnkCombinations,  matLnkProbabilities, entropy, null, new Txos(inputs, outputs), fees, intraFees, efficiency);
+        processTest(inputs, outputs, settings, expected, expectedReadableDtrmLnks);
     }
 
     @Test
@@ -84,6 +89,11 @@ public class VectorsTest {
         settings.setMaxCjIntrafeesRatio(0);
         IntraFees intraFees = new IntraFees(0, 0);
         TxProcessorResult expected = new TxProcessorResult(nbCmbn, matLnkCombinations, matLnkProbabilities, entropy, null, new Txos(inputs, outputs), fees, intraFees, efficiency);
+        processTest(inputs, outputs, settings, expected, expectedReadableDtrmLnks);
+
+        settings.setMaxCjIntrafeesRatio(0.005f);
+        intraFees = new IntraFees(0, 0);
+        expected = new TxProcessorResult(nbCmbn, matLnkCombinations,  matLnkProbabilities, entropy, null, new Txos(inputs, outputs), fees, intraFees, efficiency);
         processTest(inputs, outputs, settings, expected, expectedReadableDtrmLnks);
     }
 
@@ -230,6 +240,11 @@ public class VectorsTest {
         settings.setMaxCjIntrafeesRatio(0);
         IntraFees intraFees = new IntraFees(0, 0);
         TxProcessorResult expected = new TxProcessorResult(nbCmbn, matLnkCombinations, matLnkProbabilities, entropy, null, new Txos(inputs, outputs), fees, intraFees, efficiency);
+        processTest(inputs, outputs, settings, expected, expectedReadableDtrmLnks);
+
+        settings.setMaxCjIntrafeesRatio(0.005f);
+        intraFees = new IntraFees(0, 0);
+        expected = new TxProcessorResult(nbCmbn, matLnkCombinations,  matLnkProbabilities, entropy, null, new Txos(inputs, outputs), fees, intraFees, efficiency);
         processTest(inputs, outputs, settings, expected, expectedReadableDtrmLnks);
     }
 
