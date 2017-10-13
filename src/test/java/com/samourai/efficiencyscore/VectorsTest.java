@@ -18,7 +18,7 @@ public class VectorsTest {
     private Client client = new Client();
 
     @Test
-    public void testProcess_basicPaymentTransaction_inputPacking_dcba20fdfe34fe240fa6eacccfb2e58468ba2feafcfff99706145800d09a09a6() {
+    public void testProcess_dcba20fdfe34fe240fa6eacccfb2e58468ba2feafcfff99706145800d09a09a6() {
         Map<String, Long> inputs = new LinkedHashMap<>();
         inputs.put("1QAHGtVG5EXbs1n7BuhyNKr7DGMWQWKHgS", 5300000000L);
         inputs.put("1DV9k4MzaHSHkhNMxHCjKQuXUwZXPUxEwG", 2020000000L);
@@ -60,7 +60,7 @@ public class VectorsTest {
     }
 
     @Test
-    public void testProcess_ambiguousTransaction_8c5feb901f3983b0f28d996f9606d895d75136dbe8d77ed1d6c7340a403a73bf() {
+    public void testProcess_8c5feb901f3983b0f28d996f9606d895d75136dbe8d77ed1d6c7340a403a73bf() {
         Map<String, Long> inputs = new LinkedHashMap<>();
         inputs.put("1KHWnqHHx3fQuRwPmwhZGbSYzDbN3SdhoR", 4900000000L);
         inputs.put("15Z5YJaaNSxeynvr6uW6jQZLwq3n1Hu6RX", 100000000L);
