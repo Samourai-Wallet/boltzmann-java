@@ -67,9 +67,9 @@ public class TxosAggregator {
         long[] allUniqueInAggVal = Arrays.stream(allInAggVal).distinct().sorted().toArray();
         long[] allUniqueOutAggVal = Arrays.stream(allOutAggVal).distinct().sorted().toArray();
 
-        Set<Integer> allMatchInAgg = new LinkedHashSet<>();
-        Map<Integer, Long> matchInAggToVal = new LinkedHashMap<>();
-        Map<Long, int[]> valToMatchOutAgg = new LinkedHashMap<>();
+        Set<Integer> allMatchInAgg = new HashSet<>();
+        Map<Integer, Long> matchInAggToVal = new HashMap<>();
+        Map<Long, List<Integer>> valToMatchOutAgg = new LinkedHashMap<>();
 
         // Computes total fees paid/receiver by taker/maker
         long feesTaker=0, feesMaker=0;
@@ -105,8 +105,11 @@ public class TxosAggregator {
                         });
 
                         // Registers the matching output aggregate
-                        int[] keysMatchOutAgg = IntStream.range(0, allOutAggVal.length).filter(indice -> allOutAggVal[indice] == outAggVal).toArray();
-                        valToMatchOutAgg.put(inAggVal, keysMatchOutAgg);
+                        List<Integer> keysMatchOutAgg = IntStream.range(0, allOutAggVal.length).filter(indice -> allOutAggVal[indice] == outAggVal).boxed().collect(Collectors.toList());
+                        if (!valToMatchOutAgg.containsKey(inAggVal)) {
+                            valToMatchOutAgg.put(inAggVal, new ArrayList<>());
+                        }
+                        valToMatchOutAgg.get(inAggVal).addAll(keysMatchOutAgg);
                     }
                 }
             }
@@ -299,29 +302,29 @@ public class TxosAggregator {
 
                                 // Checks if the right output sub-aggregate is valid
                                 long valIr = aggMatches.getMatchInAggToVal().get(nIr);
-                                int[] matchOutAgg = aggMatches.getValToMatchOutAgg().get(valIr);
+                                List<Integer> matchOutAgg = aggMatches.getValToMatchOutAgg().get(valIr);
 
                                 // Adds this output combination into n_d_out if all conditions met
-                                if ((nSol & nOr) == 0 && IntStream.of(matchOutAgg).anyMatch(x -> x == nOr)){ // TODO performance matchOutAgg.contains(nOr)
-                                    Map<Integer,int[]> ndOutVal = ndOut.get(nOr);
+                                if ((nSol & nOr) == 0 && matchOutAgg.stream().anyMatch(x -> x == nOr)) { // TODO performance matchOutAgg.contains(nOr)
+                                    Map<Integer, int[]> ndOutVal = ndOut.get(nOr);
                                     if (ndOutVal == null) {
                                         ndOutVal = new LinkedHashMap<>();
                                         ndOut.put(nOr, ndOutVal);
                                     }
-                                    ndOutVal.put(nOl, new int[]{nbPrt,0});
+                                    ndOutVal.put(nOl, new int[]{nbPrt, 0});
                                 }
                             }
                         }
-
-                        // Updates idx_il for the current task
-                        t.setIdxIl(i+1);
-
-                        // Pushes a new task which will decompose the right input aggregate
-                        stack.add(new ComputeLinkMatrixTask(0, nIl, nIr, ndOut));
-
-                        // Executes the new task (depth-first)
-                        break;
                     }
+
+                    // Updates idx_il for the current task
+                    t.setIdxIl(i+1);
+
+                    // Pushes a new task which will decompose the right input aggregate
+                    stack.add(new ComputeLinkMatrixTask(0, nIl, nIr, ndOut));
+
+                    // Executes the new task (depth-first)
+                    break;
                 }
                 else {
                     // No more results for il, triggers a break and a pop
@@ -366,11 +369,11 @@ public class TxosAggregator {
                             // Updates parent d_out by back-propagating number of child combinations
                             int pOr = ol+or;
                             Map<Integer,int[]> plOl = pt.getdOut().get(pOr);
-                            for (Map.Entry<Integer,int[]> plOlEntry : plOl.entrySet()) {
+                            for (Map.Entry<Integer, int[]> plOlEntry : plOl.entrySet()) {
                                 int pOl = plOlEntry.getKey();
                                 int pNbPrt = plOlEntry.getValue()[0];
                                 int pNbChld = plOlEntry.getValue()[1];
-                                pt.getdOut().get(pOr).put(pOl, new int[]{pNbPrt, pNbChld+nbOccur});
+                                pt.getdOut().get(pOr).put(pOl, new int[]{pNbPrt, pNbChld + nbOccur});
                             }
                         }
                     }
