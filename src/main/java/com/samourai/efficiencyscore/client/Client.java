@@ -15,7 +15,7 @@ public class Client {
      */
     public void displayResults(TxProcessorResult result) {
         System.out.println("Inputs = " + result.getTxos().getInputs());
-        System.out.println("Outputs = ' = " + result.getTxos().getOutputs());
+        System.out.println("Outputs = " + result.getTxos().getOutputs());
         System.out.println("Fees = " + result.getFees() + " satoshis");
 
         if (result.getIntraFees() != null && result.getIntraFees().getFeesMaker() > 0 && result.getIntraFees().getFeesTaker() > 0) {
@@ -42,7 +42,7 @@ public class Client {
                 System.out.println("Linkability Matrix (probabilities) :");
                 System.out.println(Arrays.deepToString(result.getMatLnkProbabilities()));
             }
-            else {
+            if (result.getMatLnkCombinations() != null){
                 System.out.println("Linkability Matrix (#combinations with link) :");
                 System.out.println(Arrays.deepToString(result.getMatLnkCombinations()));
             }
