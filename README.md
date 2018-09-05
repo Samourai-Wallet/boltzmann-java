@@ -11,3 +11,5 @@ For a description of the metrics :
 - Bitcoin Transactions & Privacy (part 3) : https://gist.github.com/LaurentMT/e8644d5bc903f02613c6
 
 Boltzmann is also available for Python: https://github.com/Samourai-Wallet/boltzmann
+
+[![](https://jitpack.io/v/Samourai-Wallet/efficiency-score.svg)](https://jitpack.io/#Samourai-Wallet/efficiency-score)
