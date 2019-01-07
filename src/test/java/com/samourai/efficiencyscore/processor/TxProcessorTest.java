@@ -1,6 +1,9 @@
 package com.samourai.efficiencyscore.processor;
 
+import com.samourai.efficiencyscore.beans.Tx;
+import com.samourai.efficiencyscore.beans.Txos;
 import com.samourai.efficiencyscore.linker.IntraFees;
+import com.samourai.efficiencyscore.linker.TxosLinkerOptionEnum;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -42,5 +45,92 @@ public class TxProcessorTest {
         Assert.assertEquals(expected.getFeesTaker(), result.getFeesTaker());
     }
 
+    @Test
+    public void entropyTest() {
+
+        TxProcessorSettings settings = new TxProcessorSettings();
+        settings.setOptions(new TxosLinkerOptionEnum[]{TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY});
+        settings.setMaxCjIntrafeesRatio(0.005f);
+
+        // 8e56317360a548e8ef28ec475878ef70d1371bee3526c017ac22ad61ae5740b8
+        Map<String, Long> ins0 = new HashMap<>();
+        ins0.put("1FJNUgMPRyBx6ahPmsH6jiYZHDWBPEHfU7", 10000000L);
+        ins0.put("1JDHTo412L9RCtuGbYw4MBeL1xn7ZTuzLH", 1380000L);
+
+        Map<String, Long> outs0 = new HashMap<>();
+        outs0.put("18JNSFk8eRZcM8RdqLDSgCiipgnfAYsFef", 9850000L);
+        outs0.put("1PA1eHufj8axDWEbYfPtL8HXfA66gTFsFc", 1270000L);
+        outs0.put("1JR3x2xNfeFicqJcvzz1gkEhHEewJBb5Zb", 100000L);
+        outs0.put("1ALKUqxRb2MeFqomLCqeYwDZK6FvLNnP3H", 100000L);
+
+        Txos txos0 = new Txos(ins0, outs0);
+        Tx tx0 = new Tx(txos0);
+
+        TxProcessorResult result0 = txProcessor.processTx(tx0, settings);
+
+        Assert.assertEquals(1.5849625007211563f, result0.getEntropy(), 0.01f);
+
+        // 742d8e113839946dad9e81c4b5211e959710a55aa499486bf13a3f435b45456c
+        Map<String, Long> ins1 = new HashMap<>();
+        ins1.put("bc1q0wsrm6523zkt0vs9dvae7c64d5yuq86x5ec", 2999808L);
+        ins1.put("3C6tAAZCTt4bGZ45s4zdhgNpfCFT5Y4b3v", 2999854L);
+
+        Map<String, Long> outs1 = new HashMap<>();
+        outs1.put("1AiruUx2v1De9p1MJgKiUgm75bzUDhGkJT", 427566L);
+        outs1.put("1FdoMZmYdJxAeddMPkB57PU39fzFMmqgkg", 427566L);
+        outs1.put("3JXHgGknQyFnUKSNnicmcEyXaY2pxY4L3h", 2571867L);
+        outs1.put("bc1qj2pyuyx9rercqxvr0sk3mqwlqdrdw7v8dha", 2572242L);
+
+        Txos txos1 = new Txos(ins1, outs1);
+        Tx tx1 = new Tx(txos1);
+
+        TxProcessorResult result1 = txProcessor.processTx(tx1, settings);
+
+        Assert.assertEquals(2.321928094887362f, result1.getEntropy(), 0.01f);
+    }
+
+    @Test
+    public void efficiencyTest() {
+
+        TxProcessorSettings settings = new TxProcessorSettings();
+        settings.setOptions(new TxosLinkerOptionEnum[]{TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY});
+        settings.setMaxCjIntrafeesRatio(0.005f);
+
+        // 8e56317360a548e8ef28ec475878ef70d1371bee3526c017ac22ad61ae5740b8
+        Map<String, Long> ins0 = new HashMap<>();
+        ins0.put("1FJNUgMPRyBx6ahPmsH6jiYZHDWBPEHfU7", 10000000L);
+        ins0.put("1JDHTo412L9RCtuGbYw4MBeL1xn7ZTuzLH", 1380000L);
+
+        Map<String, Long> outs0 = new HashMap<>();
+        outs0.put("18JNSFk8eRZcM8RdqLDSgCiipgnfAYsFef", 9850000L);
+        outs0.put("1PA1eHufj8axDWEbYfPtL8HXfA66gTFsFc", 1270000L);
+        outs0.put("1JR3x2xNfeFicqJcvzz1gkEhHEewJBb5Zb", 100000L);
+        outs0.put("1ALKUqxRb2MeFqomLCqeYwDZK6FvLNnP3H", 100000L);
+
+        Txos txos0 = new Txos(ins0, outs0);
+        Tx tx0 = new Tx(txos0);
+
+        TxProcessorResult result0 = txProcessor.processTx(tx0, settings);
+
+        Assert.assertEquals(0.42857142857142855f, result0.getEfficiency(), 0.01f);
+
+        // 742d8e113839946dad9e81c4b5211e959710a55aa499486bf13a3f435b45456c
+        Map<String, Long> ins1 = new HashMap<>();
+        ins1.put("bc1q0wsrm6523zkt0vs9dvae7c64d5yuq86x5ec", 2999808L);
+        ins1.put("3C6tAAZCTt4bGZ45s4zdhgNpfCFT5Y4b3v", 2999854L);
+
+        Map<String, Long> outs1 = new HashMap<>();
+        outs1.put("1AiruUx2v1De9p1MJgKiUgm75bzUDhGkJT", 427566L);
+        outs1.put("1FdoMZmYdJxAeddMPkB57PU39fzFMmqgkg", 427566L);
+        outs1.put("3JXHgGknQyFnUKSNnicmcEyXaY2pxY4L3h", 2571867L);
+        outs1.put("bc1qj2pyuyx9rercqxvr0sk3mqwlqdrdw7v8dha", 2572242L);
+
+        Txos txos1 = new Txos(ins1, outs1);
+        Tx tx1 = new Tx(txos1);
+
+        TxProcessorResult result1 = txProcessor.processTx(tx1, settings);
+
+        Assert.assertEquals(0.7142857142857143f, result1.getEfficiency(), 0.01f);
+    }
 
 }
