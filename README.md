@@ -1,4 +1,6 @@
-# Boltzmann
+[![](https://jitpack.io/v/Samourai-Wallet/boltzmann-java.svg)](https://jitpack.io/#Samourai-Wallet/boltzmann-java)
+
+# Boltzmann-Java
 
 A Java library computing the entropy of Bitcoin transactions and the linkability of their inputs and outputs.
 
@@ -12,4 +14,3 @@ For a description of the metrics :
 
 Boltzmann is also available for Python: https://github.com/Samourai-Wallet/boltzmann
 
-[![](https://jitpack.io/v/Samourai-Wallet/efficiency-score.svg)](https://jitpack.io/#Samourai-Wallet/efficiency-score)
