@@ -1,6 +1,5 @@
 package com.samourai.efficiencyscore.utils;
 
-
 import java.util.*;
 
 public class ListsUtils {

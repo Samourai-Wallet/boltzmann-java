@@ -7,7 +7,7 @@ public class TxosAggregatesData {
   private Map<String, Long> txos;
   private int[][]
       allAggIndexes; // each entry value contains array of txos indexes for corresponding
-                     // allAggVal[entry.key]
+  // allAggVal[entry.key]
   private long[] allAggVal;
 
   public TxosAggregatesData(Map<String, Long> txos, int[][] allAggIndexes, long[] allAggVal) {
