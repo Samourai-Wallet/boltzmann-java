@@ -9,7 +9,8 @@ import com.samourai.efficiencyscore.linker.TxosLinkerOptionEnum;
 import com.samourai.efficiencyscore.linker.TxosLinkerResult;
 import com.samourai.efficiencyscore.utils.ListsUtils;
 import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Map.Entry;
+import java8.util.stream.LongStreams;
 
 public class TxProcessor {
 
@@ -23,7 +24,8 @@ public class TxProcessor {
    * @return TxProcessorResult
    */
   public TxProcessorResult processTx(Tx tx, TxProcessorSettings settings) {
-    Set<TxosLinkerOptionEnum> options = new HashSet<>(Arrays.asList(settings.getOptions()));
+    Set<TxosLinkerOptionEnum> options =
+        new HashSet<TxosLinkerOptionEnum>(Arrays.asList(settings.getOptions()));
 
     // Builds lists of filtered input/output txos (with generated ids)
     FilteredTxos filteredIns = filterTxos(tx.getTxos().getInputs(), TxProcessorConst.MARKER_INPUT);
@@ -31,8 +33,10 @@ public class TxProcessor {
         filterTxos(tx.getTxos().getOutputs(), TxProcessorConst.MARKER_OUTPUT);
 
     // Computes total input & output amounts + fees
-    long sumInputs = filteredIns.getTxos().values().stream().mapToLong(x -> x).sum();
-    long sumOutputs = filteredOuts.getTxos().values().stream().mapToLong(x -> x).sum();
+    long sumInputs =
+        LongStreams.of(ListsUtils.toPrimitiveArray(filteredIns.getTxos().values())).sum();
+    long sumOutputs =
+        LongStreams.of(ListsUtils.toPrimitiveArray(filteredOuts.getTxos().values())).sum();
     long fees = sumInputs - sumOutputs;
 
     // Sets default intrafees paid by participants (fee_received_by_maker, fees_paid_by_taker)
@@ -54,8 +58,8 @@ public class TxProcessor {
       TxosLinker linker = new TxosLinker(fees, settings.getMaxDuration(), settings.getMaxTxos());
 
       // Computes a list of sets of inputs controlled by a same address
-      List<Set<String>> linkedIns = new ArrayList<>();
-      List<Set<String>> linkedOuts = new ArrayList<>();
+      List<Set<String>> linkedIns = new ArrayList<Set<String>>();
+      List<Set<String>> linkedOuts = new ArrayList<Set<String>>();
 
       if (options.contains(TxosLinkerOptionEnum.MERGE_INPUTS)) {
         // Computes a list of sets of inputs controlled by a same address
@@ -70,21 +74,15 @@ public class TxProcessor {
       // Computes intrafees to be used during processing
       if (settings.getMaxCjIntrafeesRatio() > 0) {
         // Computes a theoretic max number of participants
-        List<Set<String>> lsFilteredIns =
-            filteredIns
-                .getTxos()
-                .keySet()
-                .stream()
-                .map(
-                    txoId -> {
-                      Set<String> set = new LinkedHashSet<>();
-                      set.add(txoId);
-                      return set;
-                    })
-                .collect(Collectors.toList());
+        List<Set<String>> lsFilteredIns = new LinkedList<Set<String>>();
+        for (String txoId : filteredIns.getTxos().keySet()) {
+          Set<String> set = new LinkedHashSet<String>();
+          set.add(txoId);
+          lsFilteredIns.add(set);
+        }
 
         lsFilteredIns.addAll(linkedIns);
-        Collection<Set<String>> insToMerge = new ArrayList<>();
+        Collection<Set<String>> insToMerge = new ArrayList<Set<String>>();
         insToMerge.addAll(lsFilteredIns);
         insToMerge.addAll(linkedIns);
         int maxNbPtcpts = ListsUtils.mergeSets(insToMerge).size();
@@ -104,7 +102,7 @@ public class TxProcessor {
       }
 
       // Computes entropy of the tx and txos linkability matrix
-      Collection<Set<String>> linkedTxos = new ArrayList<>();
+      Collection<Set<String>> linkedTxos = new ArrayList<Set<String>>();
       linkedTxos.addAll(linkedIns);
       linkedTxos.addAll(linkedOuts);
       result = linker.process(filteredTxos, linkedTxos, options, intraFees);
@@ -140,41 +138,36 @@ public class TxProcessor {
    * @param filteredTxos FilteredTxos
    */
   private List<Set<String>> getLinkedTxos(FilteredTxos filteredTxos) { // TODO test
-    List<Set<String>[]> linkedTxos = new ArrayList<>();
+    List<Set<String>[]> linkedTxos = new ArrayList<Set<String>[]>();
 
-    filteredTxos
-        .getTxos()
-        .forEach(
-            (id, amount) -> {
-              Set<String> setIns = new LinkedHashSet<>();
-              setIns.add(id);
+    for (String id : filteredTxos.getTxos().keySet()) {
+      Set<String> setIns = new LinkedHashSet<String>();
+      setIns.add(id);
 
-              Set<String> setAddr = new LinkedHashSet<>();
-              setAddr.add(filteredTxos.getMapIdAddr().get(id));
+      Set<String> setAddr = new LinkedHashSet<String>();
+      setAddr.add(filteredTxos.getMapIdAddr().get(id));
 
-              // Checks if this set intersects with some set previously found
-              linkedTxos.forEach(
-                  entry -> {
-                    Set<String> k = entry[0];
-                    Set<String> v = entry[1];
-                    if (!Sets.intersection(k, setAddr).isEmpty()) {
-                      // If an intersection is found, merges the 2 sets and removes previous set
-                      // from linked_txos
-                      setIns.addAll(v);
-                      setAddr.addAll(k);
-                      linkedTxos.remove(entry);
-                    }
-                  });
+      // Checks if this set intersects with some set previously found
+      for (Set<String>[] entry : linkedTxos) {
+        Set<String> k = entry[0];
+        Set<String> v = entry[1];
+        if (!Sets.intersection(k, setAddr).isEmpty()) {
+          // If an intersection is found, merges the 2 sets and removes previous set
+          // from linked_txos
+          setIns.addAll(v);
+          setAddr.addAll(k);
+          linkedTxos.remove(entry);
+        }
+      }
+      linkedTxos.add(new Set[] {setAddr, setIns});
+    }
 
-              linkedTxos.add(new Set[] {setAddr, setIns});
-            });
-
-    List<Set<String>> result =
-        linkedTxos
-            .stream()
-            .filter(sets -> sets[1].size() > 1)
-            .map(sets -> sets[1])
-            .collect(Collectors.toList());
+    List<Set<String>> result = new ArrayList<Set<String>>();
+    for (Set<String>[] sets : linkedTxos) {
+      if (sets[1].size() > 1) {
+        result.add(sets[1]);
+      }
+    }
     return result;
   }
 
@@ -187,18 +180,16 @@ public class TxProcessor {
    * @return FilteredTxos
    */
   private FilteredTxos filterTxos(Map<String, Long> txos, String prefix) {
-    Map<String, Long> filteredTxos = new LinkedHashMap<>();
-    Map<String, String> mapIdAddr = new LinkedHashMap<>();
+    Map<String, Long> filteredTxos = new LinkedHashMap<String, Long>();
+    Map<String, String> mapIdAddr = new LinkedHashMap<String, String>();
 
-    txos.entrySet()
-        .forEach(
-            entry -> {
-              if (entry.getValue() > 0) {
-                String txoId = prefix + mapIdAddr.size();
-                filteredTxos.put(txoId, entry.getValue());
-                mapIdAddr.put(txoId, entry.getKey());
-              }
-            });
+    for (Entry<String, Long> entry : txos.entrySet()) {
+      if (entry.getValue() > 0) {
+        String txoId = prefix + mapIdAddr.size();
+        filteredTxos.put(txoId, entry.getValue());
+        mapIdAddr.put(txoId, entry.getKey());
+      }
+    }
 
     return new FilteredTxos(filteredTxos, mapIdAddr);
   }
@@ -211,25 +202,16 @@ public class TxProcessor {
    * @param mapIdAddr mapping txo_ids to addresses
    */
   public Map<String, Long> postProcessTxos(Map<String, Long> txos, Map<String, String> mapIdAddr) {
-    return txos.entrySet()
-        .stream()
-        .map(
-            entry -> {
-              if (entry.getKey().startsWith(TxProcessorConst.MARKER_INPUT)
-                  || entry.getKey().startsWith(TxProcessorConst.MARKER_OUTPUT)) {
-                return new AbstractMap.SimpleEntry<>(
-                    mapIdAddr.get(entry.getKey()), entry.getValue());
-              }
-              return entry; // PACKS, FEES...
-            })
-        .collect(
-            Collectors.toMap(
-                entry -> entry.getKey(),
-                entry -> entry.getValue(),
-                (u, v) -> {
-                  throw new IllegalStateException(String.format("Duplicate key %s", u));
-                },
-                LinkedHashMap::new));
+    Map<String, Long> results = new LinkedHashMap<String, Long>();
+    for (Entry<String, Long> entry : txos.entrySet()) {
+      if (entry.getKey().startsWith(TxProcessorConst.MARKER_INPUT)
+          || entry.getKey().startsWith(TxProcessorConst.MARKER_OUTPUT)) {
+        results.put(mapIdAddr.get(entry.getKey()), entry.getValue());
+      } else {
+        results.put(entry.getKey(), entry.getValue()); // PACKS, FEES...
+      }
+    }
+    return results;
   }
 
   /**
@@ -248,14 +230,13 @@ public class TxProcessor {
     }
 
     // Computes a dictionary of #outputs per amount (d[amount] = nb_outputs)
-    Map<Long, Integer> nbOutsByAmount =
-        txoOuts
-            .entrySet()
-            .stream()
-            .collect(
-                Collectors.groupingBy(
-                    Map.Entry::getValue, Collectors.summingInt(s -> 1)) // counting as integer
-                );
+    Map<Long, Integer> nbOutsByAmount = new LinkedHashMap<Long, Integer>();
+    for (Entry<String, Long> entry : txoOuts.entrySet()) {
+      long amont = entry.getValue();
+      int nb = nbOutsByAmount.containsKey(amont) ? nbOutsByAmount.get(amont) : 0;
+      nb++;
+      nbOutsByAmount.put(amont, nb);
+    }
 
     // Computes #outputs
     int nbTxoOuts = txoOuts.size();

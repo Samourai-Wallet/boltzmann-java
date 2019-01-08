@@ -1,6 +1,7 @@
 package com.samourai.efficiencyscore.utils;
 
 import java.util.*;
+import java.util.Map.Entry;
 
 public class ListsUtils {
 
@@ -12,15 +13,15 @@ public class ListsUtils {
    * @return Returns the list with merged sets.
    */
   public static List<Set<String>> mergeSets(Collection<Set<String>> sets) {
-    LinkedList<Set<String>> tmp_sets = new LinkedList<>(sets);
+    LinkedList<Set<String>> tmp_sets = new LinkedList<Set<String>>(sets);
     boolean merged = true;
     while (merged) {
       merged = false;
-      LinkedList<Set<String>> res = new LinkedList<>();
+      LinkedList<Set<String>> res = new LinkedList<Set<String>>();
       while (!tmp_sets.isEmpty()) {
         Set<String> current = tmp_sets.poll();
         LinkedList<Set<String>> rest = tmp_sets;
-        tmp_sets = new LinkedList<>();
+        tmp_sets = new LinkedList<Set<String>>();
         for (Set<String> x : rest) {
           if (Collections.disjoint(current, x)) {
             tmp_sets.add(x);
@@ -45,5 +46,37 @@ public class ListsUtils {
         if ((b & 1) != 0) result[i][k++] = a[j];
     }
     return result;
+  }
+
+  public static <K, V extends Comparable<? super V>> Map<K, V> sortMap(
+      Map<K, V> map, Comparator<Map.Entry<K, V>> comparator) {
+    List<Entry<K, V>> list = new ArrayList<Entry<K, V>>(map.entrySet());
+    Collections.sort(list, comparator);
+
+    Map<K, V> result = new LinkedHashMap<K, V>();
+    for (Entry<K, V> entry : list) {
+      result.put(entry.getKey(), entry.getValue());
+    }
+
+    return result;
+  }
+
+  public static <K, V extends Comparable<? super V>>
+      Comparator<Map.Entry<K, V>> comparingByValue() {
+    return new Comparator<Map.Entry<K, V>>() {
+      @Override
+      public int compare(Entry<K, V> c1, Entry<K, V> c2) {
+        return c1.getValue().compareTo(c2.getValue());
+      }
+    };
+  }
+
+  public static long[] toPrimitiveArray(Collection<Long> items) {
+    long[] arr = new long[items.size()];
+    Iterator<Long> iter = items.iterator();
+    for (int i = 0; iter.hasNext(); i++) {
+      arr[i] = iter.next();
+    }
+    return arr;
   }
 }

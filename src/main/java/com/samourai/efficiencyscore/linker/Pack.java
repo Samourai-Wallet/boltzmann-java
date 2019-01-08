@@ -1,19 +1,15 @@
 package com.samourai.efficiencyscore.linker;
 
-import java.util.AbstractMap;
 import java.util.List;
+import java.util.Map.Entry;
 
 class Pack {
   private String lbl;
   private PackType packType;
-  private List<AbstractMap.SimpleEntry<String, Long>> ins;
+  private List<Entry<String, Long>> ins;
   private List<String> outs;
 
-  Pack(
-      String lbl,
-      PackType packType,
-      List<AbstractMap.SimpleEntry<String, Long>> ins,
-      List<String> outs) {
+  Pack(String lbl, PackType packType, List<Entry<String, Long>> ins, List<String> outs) {
     this.lbl = lbl;
     this.packType = packType;
     this.ins = ins;
@@ -28,7 +24,7 @@ class Pack {
     return packType;
   }
 
-  public List<AbstractMap.SimpleEntry<String, Long>> getIns() {
+  public List<Entry<String, Long>> getIns() {
     return ins;
   }
 

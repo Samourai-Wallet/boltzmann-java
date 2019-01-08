@@ -8,7 +8,9 @@ import com.samourai.efficiencyscore.linker.*;
 import com.samourai.efficiencyscore.processor.TxProcessor;
 import com.samourai.efficiencyscore.processor.TxProcessorResult;
 import com.samourai.efficiencyscore.processor.TxProcessorSettings;
+import com.samourai.efficiencyscore.utils.ListsUtils;
 import java.util.*;
+import java8.util.stream.LongStreams;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -18,7 +20,7 @@ public class VectorsTest {
 
   @Test
   public void testProcess_dcba20fdfe34fe240fa6eacccfb2e58468ba2feafcfff99706145800d09a09a6() {
-    Map<String, Long> inputs = new LinkedHashMap<>();
+    Map<String, Long> inputs = new LinkedHashMap<String, Long>();
     inputs.put("1QAHGtVG5EXbs1n7BuhyNKr7DGMWQWKHgS", 5300000000L);
     inputs.put("1DV9k4MzaHSHkhNMxHCjKQuXUwZXPUxEwG", 2020000000L);
     inputs.put("1NaNy4UwTGrRcvuufHsVWj1KWGEc3PEk9K", 4975000000L);
@@ -26,7 +28,7 @@ public class VectorsTest {
     inputs.put("16boodvrd8PVSGPmtB87PD9XfsJzwaMh3T", 5556000000L);
     inputs.put("1KVry787zTL42uZinmpyqW9umC4PbKxPCa", 7150000000L);
 
-    Map<String, Long> outputs = new LinkedHashMap<>();
+    Map<String, Long> outputs = new LinkedHashMap<String, Long>();
     outputs.put("1ABoCkCDm7RVwzuapb1TALDNaEDSvP91D8", 1000000L);
     outputs.put("1BPUHdEzaJLz9VBT2d3hivSYEJALHmzrGa", 30000000000L);
 
@@ -86,11 +88,11 @@ public class VectorsTest {
 
   @Test
   public void testProcess_8c5feb901f3983b0f28d996f9606d895d75136dbe8d77ed1d6c7340a403a73bf() {
-    Map<String, Long> inputs = new LinkedHashMap<>();
+    Map<String, Long> inputs = new LinkedHashMap<String, Long>();
     inputs.put("1KHWnqHHx3fQuRwPmwhZGbSYzDbN3SdhoR", 4900000000L);
     inputs.put("15Z5YJaaNSxeynvr6uW6jQZLwq3n1Hu6RX", 100000000L);
 
-    Map<String, Long> outputs = new LinkedHashMap<>();
+    Map<String, Long> outputs = new LinkedHashMap<String, Long>();
     outputs.put("1NKToQ48X5qaMo1ndexWmHKnn6FNNViivq", 4900000000L);
     outputs.put("15Z5YJaaNSxeynvr6uW6jQZLwq3n1Hu6RX", 100000000L);
 
@@ -141,11 +143,11 @@ public class VectorsTest {
   @Test
   public void
       testProcess_coinJoin_8e56317360a548e8ef28ec475878ef70d1371bee3526c017ac22ad61ae5740b8() {
-    Map<String, Long> inputs = new LinkedHashMap<>();
+    Map<String, Long> inputs = new LinkedHashMap<String, Long>();
     inputs.put("1FJNUgMPRyBx6ahPmsH6jiYZHDWBPEHfU7", 10000000L);
     inputs.put("1JDHTo412L9RCtuGbYw4MBeL1xn7ZTuzLH", 1380000L);
 
-    Map<String, Long> outputs = new LinkedHashMap<>();
+    Map<String, Long> outputs = new LinkedHashMap<String, Long>();
     outputs.put("1JR3x2xNfeFicqJcvzz1gkEhHEewJBb5Zb", 100000L);
     outputs.put("18JNSFk8eRZcM8RdqLDSgCiipgnfAYsFef", 9850000L);
     outputs.put("1ALKUqxRb2MeFqomLCqeYwDZK6FvLNnP3H", 100000L);
@@ -204,14 +206,14 @@ public class VectorsTest {
   @Test
   public void
       testProcess_coinJoin_7d588d52d1cece7a18d663c977d6143016b5b326404bbf286bc024d5d54fcecb() {
-    Map<String, Long> inputs = new LinkedHashMap<>();
+    Map<String, Long> inputs = new LinkedHashMap<String, Long>();
     inputs.put("1KMYhyxf3HQ9AS6fEKx4JFeBW9f9fxxwKG", 260994463L);
     inputs.put("1KUMiSa4Asac8arevxQ3Zqy3K4VZGGrgqF", 98615817L);
     inputs.put("1PQWvTNkbcq8g2hLiRHgS4VWVbwnawMt3A", 84911243L);
     inputs.put("14c8VyzSrR6ibPiQBjEFrrPRYNFfm2Sfhw", 20112774L);
     inputs.put("1E1PUeh3EmXY4vNf2HkRyXwQFnXHFWgJPP", 79168410L);
 
-    Map<String, Long> outputs = new LinkedHashMap<>();
+    Map<String, Long> outputs = new LinkedHashMap<String, Long>();
     outputs.put("13vsiRp43UCvpJTNvgh1ma3gGtHiz7ap1u", 14868890L);
     outputs.put("1JLoZi3H5imXGv365kXhR1HMgkCDJVNu38", 84077613L);
     outputs.put("1BPwP8GXe3qVadzn1ATYCDkUEZ6R9mPxjG", 84077613L);
@@ -356,11 +358,11 @@ public class VectorsTest {
 
   @Test
   public void testProcess_testCaseA() {
-    Map<String, Long> inputs = new LinkedHashMap<>();
+    Map<String, Long> inputs = new LinkedHashMap<String, Long>();
     inputs.put("a", 10L);
     inputs.put("b", 10L);
 
-    Map<String, Long> outputs = new LinkedHashMap<>();
+    Map<String, Long> outputs = new LinkedHashMap<String, Long>();
     outputs.put("A", 8L);
     outputs.put("B", 2L);
     outputs.put("C", 3L);
@@ -418,11 +420,11 @@ public class VectorsTest {
 
   @Test
   public void testProcess_testCaseB() {
-    Map<String, Long> inputs = new LinkedHashMap<>();
+    Map<String, Long> inputs = new LinkedHashMap<String, Long>();
     inputs.put("a", 10L);
     inputs.put("b", 10L);
 
-    Map<String, Long> outputs = new LinkedHashMap<>();
+    Map<String, Long> outputs = new LinkedHashMap<String, Long>();
     outputs.put("A", 8L);
     outputs.put("B", 2L);
     outputs.put("C", 2L);
@@ -460,11 +462,11 @@ public class VectorsTest {
 
   @Test
   public void testProcess_testCaseB2() {
-    Map<String, Long> inputs = new LinkedHashMap<>();
+    Map<String, Long> inputs = new LinkedHashMap<String, Long>();
     inputs.put("a", 10L);
     inputs.put("b", 10L);
 
-    Map<String, Long> outputs = new LinkedHashMap<>();
+    Map<String, Long> outputs = new LinkedHashMap<String, Long>();
     outputs.put("A", 10L);
     outputs.put("C", 2L);
     outputs.put("D", 8L);
@@ -505,11 +507,11 @@ public class VectorsTest {
 
   @Test
   public void testProcess_testCaseC() {
-    Map<String, Long> inputs = new LinkedHashMap<>();
+    Map<String, Long> inputs = new LinkedHashMap<String, Long>();
     inputs.put("a", 10L);
     inputs.put("b", 10L);
 
-    Map<String, Long> outputs = new LinkedHashMap<>();
+    Map<String, Long> outputs = new LinkedHashMap<String, Long>();
     outputs.put("A", 5L);
     outputs.put("B", 5L);
     outputs.put("C", 5L);
@@ -552,11 +554,11 @@ public class VectorsTest {
 
   @Test
   public void testProcess_testCaseC2() {
-    Map<String, Long> inputs = new LinkedHashMap<>();
+    Map<String, Long> inputs = new LinkedHashMap<String, Long>();
     inputs.put("a", 10L);
     inputs.put("b", 10L);
 
-    Map<String, Long> outputs = new LinkedHashMap<>();
+    Map<String, Long> outputs = new LinkedHashMap<String, Long>();
     outputs.put("A", 10L);
     outputs.put("C", 5L);
     outputs.put("D", 5L);
@@ -597,12 +599,12 @@ public class VectorsTest {
 
   @Test
   public void testProcess_testCaseD() {
-    Map<String, Long> inputs = new LinkedHashMap<>();
+    Map<String, Long> inputs = new LinkedHashMap<String, Long>();
     inputs.put("a", 10L);
     inputs.put("b", 10L);
     inputs.put("c", 2L);
 
-    Map<String, Long> outputs = new LinkedHashMap<>();
+    Map<String, Long> outputs = new LinkedHashMap<String, Long>();
     outputs.put("A", 8L);
     outputs.put("B", 2L);
     outputs.put("C", 2L);
@@ -648,11 +650,11 @@ public class VectorsTest {
 
   @Test
   public void testProcess_testCaseP2() {
-    Map<String, Long> inputs = new LinkedHashMap<>();
+    Map<String, Long> inputs = new LinkedHashMap<String, Long>();
     inputs.put("a", 5L);
     inputs.put("b", 5L);
 
-    Map<String, Long> outputs = new LinkedHashMap<>();
+    Map<String, Long> outputs = new LinkedHashMap<String, Long>();
     outputs.put("A", 5L);
     outputs.put("B", 5L);
 
@@ -690,12 +692,12 @@ public class VectorsTest {
 
   @Test
   public void testProcess_testCaseP3() {
-    Map<String, Long> inputs = new LinkedHashMap<>();
+    Map<String, Long> inputs = new LinkedHashMap<String, Long>();
     inputs.put("a", 5L);
     inputs.put("b", 5L);
     inputs.put("c", 5L);
 
-    Map<String, Long> outputs = new LinkedHashMap<>();
+    Map<String, Long> outputs = new LinkedHashMap<String, Long>();
     outputs.put("A", 5L);
     outputs.put("B", 5L);
     outputs.put("C", 5L);
@@ -732,12 +734,12 @@ public class VectorsTest {
 
   @Test
   public void testProcess_testCaseP3WithFees() {
-    Map<String, Long> inputs = new LinkedHashMap<>();
+    Map<String, Long> inputs = new LinkedHashMap<String, Long>();
     inputs.put("a", 5L);
     inputs.put("b", 5L);
     inputs.put("c", 5L);
 
-    Map<String, Long> outputs = new LinkedHashMap<>();
+    Map<String, Long> outputs = new LinkedHashMap<String, Long>();
     outputs.put("A", 5L);
     outputs.put("B", 3L);
     outputs.put("C", 2L);
@@ -778,12 +780,12 @@ public class VectorsTest {
 
   @Test
   public void testProcess_testCaseP3b() {
-    Map<String, Long> inputs = new LinkedHashMap<>();
+    Map<String, Long> inputs = new LinkedHashMap<String, Long>();
     inputs.put("a", 5L);
     inputs.put("b", 5L);
     inputs.put("c", 10L);
 
-    Map<String, Long> outputs = new LinkedHashMap<>();
+    Map<String, Long> outputs = new LinkedHashMap<String, Long>();
     outputs.put("A", 5L);
     outputs.put("B", 5L);
     outputs.put("C", 10L);
@@ -824,13 +826,13 @@ public class VectorsTest {
 
   @Test
   public void testProcess_testCaseP4() {
-    Map<String, Long> inputs = new LinkedHashMap<>();
+    Map<String, Long> inputs = new LinkedHashMap<String, Long>();
     inputs.put("a", 5L);
     inputs.put("b", 5L);
     inputs.put("c", 5L);
     inputs.put("d", 5L);
 
-    Map<String, Long> outputs = new LinkedHashMap<>();
+    Map<String, Long> outputs = new LinkedHashMap<String, Long>();
     outputs.put("A", 5L);
     outputs.put("B", 5L);
     outputs.put("C", 5L);
@@ -874,14 +876,14 @@ public class VectorsTest {
 
   @Test
   public void testProcess_testCaseP5() {
-    Map<String, Long> inputs = new LinkedHashMap<>();
+    Map<String, Long> inputs = new LinkedHashMap<String, Long>();
     inputs.put("a", 5L);
     inputs.put("b", 5L);
     inputs.put("c", 5L);
     inputs.put("d", 5L);
     inputs.put("e", 5L);
 
-    Map<String, Long> outputs = new LinkedHashMap<>();
+    Map<String, Long> outputs = new LinkedHashMap<String, Long>();
     outputs.put("A", 5L);
     outputs.put("B", 5L);
     outputs.put("C", 5L);
@@ -963,7 +965,7 @@ public class VectorsTest {
 
   @Test
   public void testProcess_testCaseP6() {
-    Map<String, Long> inputs = new LinkedHashMap<>();
+    Map<String, Long> inputs = new LinkedHashMap<String, Long>();
     inputs.put("a", 5L);
     inputs.put("b", 5L);
     inputs.put("c", 5L);
@@ -971,7 +973,7 @@ public class VectorsTest {
     inputs.put("e", 5L);
     inputs.put("f", 5L);
 
-    Map<String, Long> outputs = new LinkedHashMap<>();
+    Map<String, Long> outputs = new LinkedHashMap<String, Long>();
     outputs.put("A", 5L);
     outputs.put("B", 5L);
     outputs.put("C", 5L);
@@ -1068,7 +1070,7 @@ public class VectorsTest {
 
   @Test
   public void testProcess_testCaseP7() {
-    Map<String, Long> inputs = new LinkedHashMap<>();
+    Map<String, Long> inputs = new LinkedHashMap<String, Long>();
     inputs.put("a", 5L);
     inputs.put("b", 5L);
     inputs.put("c", 5L);
@@ -1077,7 +1079,7 @@ public class VectorsTest {
     inputs.put("f", 5L);
     inputs.put("g", 5L);
 
-    Map<String, Long> outputs = new LinkedHashMap<>();
+    Map<String, Long> outputs = new LinkedHashMap<String, Long>();
     outputs.put("A", 5L);
     outputs.put("B", 5L);
     outputs.put("C", 5L);
@@ -1192,7 +1194,7 @@ public class VectorsTest {
   @Test
   @Ignore // TODO performances
   public void testProcess_testCaseP8() {
-    Map<String, Long> inputs = new LinkedHashMap<>();
+    Map<String, Long> inputs = new LinkedHashMap<String, Long>();
     inputs.put("a", 5L);
     inputs.put("b", 5L);
     inputs.put("c", 5L);
@@ -1202,7 +1204,7 @@ public class VectorsTest {
     inputs.put("g", 5L);
     inputs.put("h", 5L);
 
-    Map<String, Long> outputs = new LinkedHashMap<>();
+    Map<String, Long> outputs = new LinkedHashMap<String, Long>();
     outputs.put("A", 5L);
     outputs.put("B", 5L);
     outputs.put("C", 5L);
@@ -1336,7 +1338,7 @@ public class VectorsTest {
   @Test
   @Ignore // TODO performances
   public void testProcess_testCaseP9() {
-    Map<String, Long> inputs = new LinkedHashMap<>();
+    Map<String, Long> inputs = new LinkedHashMap<String, Long>();
     inputs.put("a", 5L);
     inputs.put("b", 5L);
     inputs.put("c", 5L);
@@ -1347,7 +1349,7 @@ public class VectorsTest {
     inputs.put("h", 5L);
     inputs.put("i", 5L);
 
-    Map<String, Long> outputs = new LinkedHashMap<>();
+    Map<String, Long> outputs = new LinkedHashMap<String, Long>();
     outputs.put("A", 5L);
     outputs.put("B", 5L);
     outputs.put("C", 5L);
@@ -1390,7 +1392,7 @@ public class VectorsTest {
   @Test
   @Ignore // TODO performances
   public void testProcess_testCaseP10() {
-    Map<String, Long> inputs = new LinkedHashMap<>();
+    Map<String, Long> inputs = new LinkedHashMap<String, Long>();
     inputs.put("a", 5L);
     inputs.put("b", 5L);
     inputs.put("c", 5L);
@@ -1402,7 +1404,7 @@ public class VectorsTest {
     inputs.put("i", 5L);
     inputs.put("j", 5L);
 
-    Map<String, Long> outputs = new LinkedHashMap<>();
+    Map<String, Long> outputs = new LinkedHashMap<String, Long>();
     outputs.put("A", 5L);
     outputs.put("B", 5L);
     outputs.put("C", 5L);
@@ -1450,8 +1452,8 @@ public class VectorsTest {
       TxProcessorResult expected,
       String[][] expectedReadableDtrmLnks) {
     long t1 = System.currentTimeMillis();
-    long sumInputs = inputs.values().stream().mapToLong(value -> value).sum();
-    long sumOutputs = outputs.values().stream().mapToLong(value -> value).sum();
+    long sumInputs = LongStreams.of(ListsUtils.toPrimitiveArray(inputs.values())).sum();
+    long sumOutputs = LongStreams.of(ListsUtils.toPrimitiveArray(outputs.values())).sum();
     long fees = sumInputs - sumOutputs;
     System.out.println("fees = " + fees);
 

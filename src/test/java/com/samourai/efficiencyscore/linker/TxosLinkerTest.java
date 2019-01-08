@@ -2,6 +2,7 @@ package com.samourai.efficiencyscore.linker;
 
 import com.samourai.efficiencyscore.beans.Txos;
 import java.util.*;
+import java.util.Map.Entry;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -11,18 +12,18 @@ public class TxosLinkerTest {
 
   @Test
   public void testUnpackTxos_onePackAlone() {
-    Map<String, Long> ins = new LinkedHashMap<>();
+    Map<String, Long> ins = new LinkedHashMap<String, Long>();
     ins.put("PACK_I1", 25029376106L);
 
-    List<AbstractMap.SimpleEntry<String, Long>> entries = new ArrayList<>();
-    entries.add(new AbstractMap.SimpleEntry<>("I0", 5300000000L));
-    entries.add(new AbstractMap.SimpleEntry<>("I3", 5000000000L));
-    entries.add(new AbstractMap.SimpleEntry<>("I1", 2020000000L));
-    entries.add(new AbstractMap.SimpleEntry<>("I2", 3376106L));
+    List<Entry<String, Long>> entries = new ArrayList<Entry<String, Long>>();
+    entries.add(new AbstractMap.SimpleEntry<String, Long>("I0", 5300000000L));
+    entries.add(new AbstractMap.SimpleEntry<String, Long>("I3", 5000000000L));
+    entries.add(new AbstractMap.SimpleEntry<String, Long>("I1", 2020000000L));
+    entries.add(new AbstractMap.SimpleEntry<String, Long>("I2", 3376106L));
 
     Pack pack = new Pack("PACK_I1", PackType.INPUTS, entries, null);
 
-    Map<String, Long> expectedIns = new LinkedHashMap<>();
+    Map<String, Long> expectedIns = new LinkedHashMap<String, Long>();
     expectedIns.put("I0", 5300000000L);
     expectedIns.put("I3", 5000000000L);
     expectedIns.put("I1", 2020000000L);
@@ -35,20 +36,20 @@ public class TxosLinkerTest {
 
   @Test
   public void testUnpackTxos_onePackFollowedByOtherInputs() {
-    Map<String, Long> ins = new LinkedHashMap<>();
+    Map<String, Long> ins = new LinkedHashMap<String, Long>();
     ins.put("PACK_I1", 25029376106L);
     ins.put("I4", 123L);
     ins.put("I5", 456L);
 
-    List<AbstractMap.SimpleEntry<String, Long>> entries = new ArrayList<>();
-    entries.add(new AbstractMap.SimpleEntry<>("I0", 5300000000L));
-    entries.add(new AbstractMap.SimpleEntry<>("I3", 5000000000L));
-    entries.add(new AbstractMap.SimpleEntry<>("I1", 2020000000L));
-    entries.add(new AbstractMap.SimpleEntry<>("I2", 3376106L));
+    List<Entry<String, Long>> entries = new ArrayList<Entry<String, Long>>();
+    entries.add(new AbstractMap.SimpleEntry<String, Long>("I0", 5300000000L));
+    entries.add(new AbstractMap.SimpleEntry<String, Long>("I3", 5000000000L));
+    entries.add(new AbstractMap.SimpleEntry<String, Long>("I1", 2020000000L));
+    entries.add(new AbstractMap.SimpleEntry<String, Long>("I2", 3376106L));
 
     Pack pack = new Pack("PACK_I1", PackType.INPUTS, entries, null);
 
-    Map<String, Long> expectedIns = new LinkedHashMap<>();
+    Map<String, Long> expectedIns = new LinkedHashMap<String, Long>();
     expectedIns.put("I0", 5300000000L);
     expectedIns.put("I3", 5000000000L);
     expectedIns.put("I1", 2020000000L);
@@ -63,20 +64,20 @@ public class TxosLinkerTest {
 
   @Test
   public void testUnpackTxos_onePackPreceededByOtherInputs() {
-    Map<String, Long> ins = new LinkedHashMap<>();
+    Map<String, Long> ins = new LinkedHashMap<String, Long>();
     ins.put("I4", 123L);
     ins.put("I5", 456L);
     ins.put("PACK_I1", 25029376106L);
 
-    List<AbstractMap.SimpleEntry<String, Long>> entries = new ArrayList<>();
-    entries.add(new AbstractMap.SimpleEntry<>("I0", 5300000000L));
-    entries.add(new AbstractMap.SimpleEntry<>("I3", 5000000000L));
-    entries.add(new AbstractMap.SimpleEntry<>("I1", 2020000000L));
-    entries.add(new AbstractMap.SimpleEntry<>("I2", 3376106L));
+    List<Entry<String, Long>> entries = new ArrayList<Entry<String, Long>>();
+    entries.add(new AbstractMap.SimpleEntry<String, Long>("I0", 5300000000L));
+    entries.add(new AbstractMap.SimpleEntry<String, Long>("I3", 5000000000L));
+    entries.add(new AbstractMap.SimpleEntry<String, Long>("I1", 2020000000L));
+    entries.add(new AbstractMap.SimpleEntry<String, Long>("I2", 3376106L));
 
     Pack pack = new Pack("PACK_I1", PackType.INPUTS, entries, null);
 
-    Map<String, Long> expectedIns = new LinkedHashMap<>();
+    Map<String, Long> expectedIns = new LinkedHashMap<String, Long>();
     expectedIns.put("I4", 123L);
     expectedIns.put("I5", 456L);
     expectedIns.put("I0", 5300000000L);
@@ -91,22 +92,22 @@ public class TxosLinkerTest {
 
   @Test
   public void testUnpackTxos_onePackSurroundedByOtherInputs() {
-    Map<String, Long> ins = new LinkedHashMap<>();
+    Map<String, Long> ins = new LinkedHashMap<String, Long>();
     ins.put("I4", 123L);
     ins.put("I5", 456L);
     ins.put("PACK_I1", 25029376106L);
     ins.put("I6", 666L);
     ins.put("I7", 777L);
 
-    List<AbstractMap.SimpleEntry<String, Long>> entries = new ArrayList<>();
-    entries.add(new AbstractMap.SimpleEntry<>("I0", 5300000000L));
-    entries.add(new AbstractMap.SimpleEntry<>("I3", 5000000000L));
-    entries.add(new AbstractMap.SimpleEntry<>("I1", 2020000000L));
-    entries.add(new AbstractMap.SimpleEntry<>("I2", 3376106L));
+    List<Entry<String, Long>> entries = new ArrayList<Entry<String, Long>>();
+    entries.add(new AbstractMap.SimpleEntry<String, Long>("I0", 5300000000L));
+    entries.add(new AbstractMap.SimpleEntry<String, Long>("I3", 5000000000L));
+    entries.add(new AbstractMap.SimpleEntry<String, Long>("I1", 2020000000L));
+    entries.add(new AbstractMap.SimpleEntry<String, Long>("I2", 3376106L));
 
     Pack pack = new Pack("PACK_I1", PackType.INPUTS, entries, null);
 
-    Map<String, Long> expectedIns = new LinkedHashMap<>();
+    Map<String, Long> expectedIns = new LinkedHashMap<String, Long>();
     expectedIns.put("I4", 123L);
     expectedIns.put("I0", 5300000000L);
     expectedIns.put("I3", 5000000000L);
@@ -126,7 +127,7 @@ public class TxosLinkerTest {
       Pack pack,
       Map<String, Long> expectedTxos,
       int expectedPackIdx) {
-    Map<String, Long> unpackedTxos = new HashMap<>();
+    Map<String, Long> unpackedTxos = new HashMap<String, Long>();
     int packIdx = txosLinker.unpackTxos(currentTxos, pack, unpackedTxos);
     Assert.assertEquals(expectedTxos, unpackedTxos);
     Assert.assertEquals(expectedPackIdx, packIdx);
@@ -140,11 +141,11 @@ public class TxosLinkerTest {
     txos.getOutputs().put("O1", 111111L);
     txos.getOutputs().put("O2", 222222L);
 
-    List<AbstractMap.SimpleEntry<String, Long>> entries = new ArrayList<>();
-    entries.add(new AbstractMap.SimpleEntry<>("I0", 5300000000L));
-    entries.add(new AbstractMap.SimpleEntry<>("I3", 5000000000L));
-    entries.add(new AbstractMap.SimpleEntry<>("I1", 2020000000L));
-    entries.add(new AbstractMap.SimpleEntry<>("I2", 3376106L));
+    List<Entry<String, Long>> entries = new ArrayList<Entry<String, Long>>();
+    entries.add(new AbstractMap.SimpleEntry<String, Long>("I0", 5300000000L));
+    entries.add(new AbstractMap.SimpleEntry<String, Long>("I3", 5000000000L));
+    entries.add(new AbstractMap.SimpleEntry<String, Long>("I1", 2020000000L));
+    entries.add(new AbstractMap.SimpleEntry<String, Long>("I2", 3376106L));
 
     Pack pack = new Pack("PACK_I1", PackType.INPUTS, entries, null);
 
@@ -174,11 +175,11 @@ public class TxosLinkerTest {
     txos.getOutputs().put("O1", 111111L);
     txos.getOutputs().put("O2", 222222L);
 
-    List<AbstractMap.SimpleEntry<String, Long>> entries = new ArrayList<>();
-    entries.add(new AbstractMap.SimpleEntry<>("I0", 5300000000L));
-    entries.add(new AbstractMap.SimpleEntry<>("I3", 5000000000L));
-    entries.add(new AbstractMap.SimpleEntry<>("I1", 2020000000L));
-    entries.add(new AbstractMap.SimpleEntry<>("I2", 3376106L));
+    List<Entry<String, Long>> entries = new ArrayList<Entry<String, Long>>();
+    entries.add(new AbstractMap.SimpleEntry<String, Long>("I0", 5300000000L));
+    entries.add(new AbstractMap.SimpleEntry<String, Long>("I3", 5000000000L));
+    entries.add(new AbstractMap.SimpleEntry<String, Long>("I1", 2020000000L));
+    entries.add(new AbstractMap.SimpleEntry<String, Long>("I2", 3376106L));
 
     Pack pack = new Pack("PACK_I1", PackType.INPUTS, entries, null);
 
@@ -211,11 +212,11 @@ public class TxosLinkerTest {
     txos.getOutputs().put("O1", 111111L);
     txos.getOutputs().put("O2", 222222L);
 
-    List<AbstractMap.SimpleEntry<String, Long>> entries = new ArrayList<>();
-    entries.add(new AbstractMap.SimpleEntry<>("I0", 5300000000L));
-    entries.add(new AbstractMap.SimpleEntry<>("I3", 5000000000L));
-    entries.add(new AbstractMap.SimpleEntry<>("I1", 2020000000L));
-    entries.add(new AbstractMap.SimpleEntry<>("I2", 3376106L));
+    List<Entry<String, Long>> entries = new ArrayList<Entry<String, Long>>();
+    entries.add(new AbstractMap.SimpleEntry<String, Long>("I0", 5300000000L));
+    entries.add(new AbstractMap.SimpleEntry<String, Long>("I3", 5000000000L));
+    entries.add(new AbstractMap.SimpleEntry<String, Long>("I1", 2020000000L));
+    entries.add(new AbstractMap.SimpleEntry<String, Long>("I2", 3376106L));
 
     Pack pack = new Pack("PACK_I1", PackType.INPUTS, entries, null);
 
@@ -250,11 +251,11 @@ public class TxosLinkerTest {
     txos.getOutputs().put("O1", 111111L);
     txos.getOutputs().put("O2", 222222L);
 
-    List<AbstractMap.SimpleEntry<String, Long>> entries = new ArrayList<>();
-    entries.add(new AbstractMap.SimpleEntry<>("I0", 5300000000L));
-    entries.add(new AbstractMap.SimpleEntry<>("I3", 5000000000L));
-    entries.add(new AbstractMap.SimpleEntry<>("I1", 2020000000L));
-    entries.add(new AbstractMap.SimpleEntry<>("I2", 3376106L));
+    List<Entry<String, Long>> entries = new ArrayList<Entry<String, Long>>();
+    entries.add(new AbstractMap.SimpleEntry<String, Long>("I0", 5300000000L));
+    entries.add(new AbstractMap.SimpleEntry<String, Long>("I3", 5000000000L));
+    entries.add(new AbstractMap.SimpleEntry<String, Long>("I1", 2020000000L));
+    entries.add(new AbstractMap.SimpleEntry<String, Long>("I2", 3376106L));
 
     Pack pack = new Pack("PACK_I1", PackType.INPUTS, entries, null);
 

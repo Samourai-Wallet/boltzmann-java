@@ -8,7 +8,7 @@ public class TxProcessorConst {
   // number of combinations
   // for perfect coinjoin txs with up to 20 inputs and 60 outputs
   // Values were computed thanks to tx_processor.computeCmbnsPerfectCj()
-  private static final Map<String, Double> NB_CMBN_PRFCT_CJ = new HashMap<>();
+  private static final Map<String, Double> NB_CMBN_PRFCT_CJ = new HashMap<String, Double>();
 
   static {
     NB_CMBN_PRFCT_CJ.put("2_2", 3.0);

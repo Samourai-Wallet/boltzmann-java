@@ -1,7 +1,8 @@
 package com.samourai.efficiencyscore.aggregator;
 
 import com.google.common.math.DoubleMath;
-import java.util.Arrays;
+import java8.util.function.IntToDoubleFunction;
+import java8.util.stream.IntStreams;
 
 public class TxosAggregatorResult {
 
@@ -27,14 +28,21 @@ public class TxosAggregatorResult {
   }
 
   public double[][] computeMatLnkProbabilities() {
-    double[][] matLnkProbabilities = null;
+    double[][] matLnkProbabilities = new double[matLnkCombinations.length][];
     if (nbCmbn > 0) {
-      matLnkProbabilities =
-          Arrays.stream(matLnkCombinations)
-              .map(
-                  line ->
-                      Arrays.stream(line).mapToDouble(val -> (new Double(val) / nbCmbn)).toArray())
-              .toArray(double[][]::new);
+      for (int i = 0; i < matLnkCombinations.length; i++) {
+        int[] line = matLnkCombinations[i];
+        matLnkProbabilities[i] =
+            IntStreams.of(line)
+                .mapToDouble(
+                    new IntToDoubleFunction() {
+                      @Override
+                      public double applyAsDouble(int val) {
+                        return new Double(val) / nbCmbn;
+                      }
+                    })
+                .toArray();
+      }
     }
     return matLnkProbabilities;
   }

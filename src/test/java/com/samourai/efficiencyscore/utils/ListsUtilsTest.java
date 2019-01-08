@@ -53,15 +53,15 @@ public class ListsUtilsTest {
   }
 
   private void processTest(String[][] toMerge, String[][] expected) {
-    List<Set<String>> sets = new LinkedList<>();
+    List<Set<String>> sets = new LinkedList<Set<String>>();
     for (int i = 0; i < toMerge.length; i++) {
-      sets.add(new HashSet<>(Arrays.asList(toMerge[i])));
+      sets.add(new HashSet<String>(Arrays.asList(toMerge[i])));
     }
     Collection<Set<String>> mergedSets = ListsUtils.mergeSets(sets);
 
-    List<Set<String>> expectedSets = new LinkedList<>();
+    List<Set<String>> expectedSets = new LinkedList<Set<String>>();
     for (int i = 0; i < expected.length; i++) {
-      expectedSets.add(new HashSet<>(Arrays.asList(expected[i])));
+      expectedSets.add(new HashSet<String>(Arrays.asList(expected[i])));
     }
     Assert.assertEquals(expectedSets, mergedSets);
   }

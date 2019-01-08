@@ -7,9 +7,19 @@ import com.samourai.efficiencyscore.aggregator.TxosAggregatorResult;
 import com.samourai.efficiencyscore.beans.Txos;
 import com.samourai.efficiencyscore.processor.TxProcessorConst;
 import com.samourai.efficiencyscore.utils.ListsUtils;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 /** Compute the entropy and the inputs/outputs linkability of a of Bitcoin transaction. */
 public class TxosLinker {
@@ -27,7 +37,7 @@ public class TxosLinker {
   private long feesOrig;
   private long fees;
 
-  private List<Pack> packs = new ArrayList<>();
+  private List<Pack> packs = new ArrayList<Pack>();
 
   // max number of txos. Txs with more than max_txos inputs or outputs are not processed.
   int maxTxos;
@@ -91,7 +101,7 @@ public class TxosLinker {
     // Checks deterministic links
     int nbCmbn = 0;
     int[][] matLnk = new int[nbOuts][nbIns];
-    Set<int[]> dtrmLnks = new LinkedHashSet<>();
+    Set<int[]> dtrmLnks = new LinkedHashSet<int[]>();
     if (options.contains(TxosLinkerOptionEnum.PRECHECK)
         && this.checkLimitOk(txos)
         && !hasIntraFees) {
@@ -108,7 +118,9 @@ public class TxosLinker {
       // (returned as result if linkability is not processed)
       if (!dtrmLnks.isEmpty()) {
         final int[][] matLnkFinal = matLnk;
-        dtrmLnks.forEach(dtrmLnk -> matLnkFinal[dtrmLnk[0]][dtrmLnk[1]] = 1);
+        for (int[] dtrmLnk : dtrmLnks) {
+          matLnkFinal[dtrmLnk[0]][dtrmLnk[1]] = 1;
+        }
       }
     }
 
@@ -123,17 +135,13 @@ public class TxosLinker {
       if (!dtrmLnks.isEmpty()) {
 
         final Txos txosFinal = txos;
-        List<Set<String>> dtrmCoordsList =
-            dtrmLnks
-                .stream()
-                .map(
-                    array -> {
-                      Set<String> set = new LinkedHashSet<>();
-                      set.add("" + txosFinal.getOutputs().keySet().toArray()[array[0]]);
-                      set.add("" + txosFinal.getInputs().keySet().toArray()[array[1]]);
-                      return set;
-                    })
-                .collect(Collectors.toList());
+        List<Set<String>> dtrmCoordsList = new ArrayList<Set<String>>();
+        for (int[] array : dtrmLnks) {
+          Set<String> set = new LinkedHashSet<String>();
+          set.add("" + txosFinal.getOutputs().keySet().toArray()[array[0]]);
+          set.add("" + txosFinal.getInputs().keySet().toArray()[array[1]]);
+          dtrmCoordsList.add(set);
+        }
         txos = packLinkedTxos(dtrmCoordsList, txos);
       }
 
@@ -178,19 +186,21 @@ public class TxosLinker {
     int idx = packs.size();
 
     Txos packedTxos =
-        new Txos(new LinkedHashMap<>(txos.getInputs()), new LinkedHashMap<>(txos.getOutputs()));
+        new Txos(
+            new LinkedHashMap<String, Long>(txos.getInputs()),
+            new LinkedHashMap<String, Long>(txos.getOutputs()));
 
     // Merges packs sharing common elements
     List<Set<String>> newPacks = ListsUtils.mergeSets(linkedTxos);
 
     for (Set<String> pack : newPacks) {
-      List<AbstractMap.SimpleEntry<String, Long>> ins = new ArrayList<>();
+      List<Entry<String, Long>> ins = new ArrayList<Entry<String, Long>>();
       long valIns = 0;
 
       for (String inPack : pack) {
         if (inPack.startsWith(TxProcessorConst.MARKER_INPUT)) {
           long inPackValue = packedTxos.getInputs().get(inPack);
-          ins.add(new AbstractMap.SimpleEntry<>(inPack, inPackValue));
+          ins.add(new AbstractMap.SimpleEntry<String, Long>(inPack, inPackValue));
           valIns += packedTxos.getInputs().get(inPack);
           packedTxos.getInputs().remove(inPack);
         }
@@ -200,7 +210,7 @@ public class TxosLinker {
       if (!ins.isEmpty()) {
         String lbl = MARKER_PACK + idx;
         packedTxos.getInputs().put(lbl, valIns);
-        packs.add(new Pack(lbl, PackType.INPUTS, ins, new ArrayList<>()));
+        packs.add(new Pack(lbl, PackType.INPUTS, ins, new ArrayList<String>()));
       }
     }
     return packedTxos;
@@ -216,8 +226,10 @@ public class TxosLinker {
   protected UnpackLinkMatrixResult unpackLinkMatrix(int[][] matLnk, Txos txos) {
     int[][] matRes = matLnk.clone();
     Txos newTxos =
-        new Txos(new LinkedHashMap<>(txos.getInputs()), new LinkedHashMap<>(txos.getOutputs()));
-    List<Pack> reversedPacks = new LinkedList<>(packs);
+        new Txos(
+            new LinkedHashMap<String, Long>(txos.getInputs()),
+            new LinkedHashMap<String, Long>(txos.getOutputs()));
+    List<Pack> reversedPacks = new LinkedList<Pack>(packs);
     Collections.reverse(reversedPacks);
 
     for (int i = packs.size() - 1; i >= 0; i--) { // packs in reverse order
@@ -237,7 +249,8 @@ public class TxosLinker {
    * @param pack pack to unpack
    * @return UnpackLinkMatrixResult
    */
-  protected UnpackLinkMatrixResult unpackLinkMatrix(int[][] matLnk, Txos txos, Pack pack) {
+  protected UnpackLinkMatrixResult unpackLinkMatrix(
+      final int[][] matLnk, Txos txos, final Pack pack) {
 
     int[][] newMatLnk = null;
     Txos newTxos = txos;
@@ -245,33 +258,28 @@ public class TxosLinker {
     if (matLnk != null) {
       if (PackType.INPUTS.equals(pack.getPackType())) {
         // unpack txos
-        Map<String, Long> newInputs = new LinkedHashMap<>(txos.getInputs());
-        int idx = unpackTxos(txos.getInputs(), pack, newInputs);
+        Map<String, Long> newInputs = new LinkedHashMap<String, Long>(txos.getInputs());
+        final int idx = unpackTxos(txos.getInputs(), pack, newInputs);
         newTxos = new Txos(newInputs, txos.getOutputs());
 
         // unpack matLnk
         int nbIns = txos.getInputs().size() + pack.getIns().size() - 1;
         int nbOuts = txos.getOutputs().size();
         final int[][] newMatLnkFinal = new int[nbOuts][nbIns];
-        IntStream.range(0, nbOuts)
-            .parallel()
-            .forEach(
-                i ->
-                    IntStream.range(0, nbIns)
-                        .parallel()
-                        .forEach(
-                            j -> {
-                              if (j < idx) {
-                                // keep values before pack
-                                newMatLnkFinal[i][j] = matLnk[i][j];
-                              } else if (j >= (idx + pack.getIns().size())) {
-                                // keep values after pack
-                                newMatLnkFinal[i][j] = matLnk[i][j - pack.getIns().size() + 1];
-                              } else {
-                                // insert values for unpacked txos
-                                newMatLnkFinal[i][j] = matLnk[i][idx];
-                              }
-                            }));
+        for (int i = 0; i < nbOuts; i++) {
+          for (int j = 0; j < nbIns; j++) {
+            if (j < idx) {
+              // keep values before pack
+              newMatLnkFinal[i][j] = matLnk[i][j];
+            } else if (j >= (idx + pack.getIns().size())) {
+              // keep values after pack
+              newMatLnkFinal[i][j] = matLnk[i][j - pack.getIns().size() + 1];
+            } else {
+              // insert values for unpacked txos
+              newMatLnkFinal[i][j] = matLnk[i][idx];
+            }
+          }
+        }
         newMatLnk = newMatLnkFinal;
       }
     }
@@ -290,29 +298,24 @@ public class TxosLinker {
       Map<String, Long> currentTxos, Pack pack, Map<String, Long> unpackedTxos) {
     // find pack indice in txos
     String[] txoKeys = currentTxos.keySet().toArray(new String[] {});
-    int idx =
-        IntStream.range(0, txoKeys.length)
-            .filter(i -> pack.getLbl().equals(txoKeys[i]))
-            .findFirst()
-            .getAsInt();
+    int idx;
+    for (idx = 0; idx < txoKeys.length; idx++) {
+      if (pack.getLbl().equals(txoKeys[idx])) {
+        break;
+      }
+    }
 
     unpackedTxos.clear();
     Iterator<Map.Entry<String, Long>> currentTxosIterator = currentTxos.entrySet().iterator();
     // keep txos before pack
-    IntStream.range(0, idx)
-        .parallel()
-        .forEach(
-            i -> {
-              Map.Entry<String, Long> entry = currentTxosIterator.next();
-              unpackedTxos.put(entry.getKey(), entry.getValue());
-            });
+    for (int i = 0; i < idx; i++) {
+      Map.Entry<String, Long> entry = currentTxosIterator.next();
+      unpackedTxos.put(entry.getKey(), entry.getValue());
+    }
     // insert packed txos
-    pack.getIns()
-        .parallelStream()
-        .forEach(
-            entry -> {
-              unpackedTxos.put(entry.getKey(), entry.getValue());
-            });
+    for (Entry<String, Long> entry : pack.getIns()) {
+      unpackedTxos.put(entry.getKey(), entry.getValue());
+    }
     currentTxosIterator.next(); // skip packed txo
     // keep txos after pack
     while (currentTxosIterator.hasNext()) {

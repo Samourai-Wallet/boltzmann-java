@@ -12,7 +12,7 @@ public class Txos {
   private Map<String, Long> outputs;
 
   public Txos() {
-    this(new LinkedHashMap<>(), new LinkedHashMap<>());
+    this(new LinkedHashMap<String, Long>(), new LinkedHashMap<String, Long>());
   }
 
   public Txos(Map<String, Long> inputs, Map<String, Long> outputs) {
