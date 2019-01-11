@@ -6,17 +6,17 @@ import java.util.Set;
 
 public class TxosLinkerResult extends TxosAggregatorResult {
 
-  private Set<int[]> dtrmLnks;
+  private Set<int[]> dtrmLnksById;
   private Txos txos;
 
-  public TxosLinkerResult(int nbCmbn, int[][] matLnk, Set<int[]> dtrmLnks, Txos txos) {
+  public TxosLinkerResult(int nbCmbn, int[][] matLnk, Set<int[]> dtrmLnksById, Txos txos) {
     super(nbCmbn, matLnk);
-    this.dtrmLnks = dtrmLnks;
+    this.dtrmLnksById = dtrmLnksById;
     this.txos = txos;
   }
 
-  public Set<int[]> getDtrmLnks() {
-    return dtrmLnks;
+  public Set<int[]> getDtrmLnksById() {
+    return dtrmLnksById;
   }
 
   public Txos getTxos() {

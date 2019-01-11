@@ -1,36 +1,51 @@
 package com.samourai.efficiencyscore.processor;
 
 import com.google.common.collect.Sets;
-import com.samourai.efficiencyscore.beans.Tx;
 import com.samourai.efficiencyscore.beans.Txos;
 import com.samourai.efficiencyscore.linker.IntraFees;
 import com.samourai.efficiencyscore.linker.TxosLinker;
 import com.samourai.efficiencyscore.linker.TxosLinkerOptionEnum;
 import com.samourai.efficiencyscore.linker.TxosLinkerResult;
 import com.samourai.efficiencyscore.utils.ListsUtils;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java8.util.stream.LongStreams;
 
 public class TxProcessor {
+  private int maxDuration;
+  private int maxTxos;
 
-  public TxProcessor() {}
+  public TxProcessor(int maxDuration, int maxTxos) {
+    this.maxDuration = maxDuration;
+    this.maxTxos = maxTxos;
+  }
 
   /**
    * Processes a transaction
    *
-   * @param tx Transaction to be processed
-   * @param settings settings for processing the transaction
+   * @param txos Txos to be processed
+   * @param maxCjIntrafeesRatio maxCjIntrafeesRatio max intrafees paid by the taker of a coinjoined
+   *     transaction. Expressed as a percentage of the coinjoined amount
+   * @param linkerOptions linkerOptions options to be applied during processing
    * @return TxProcessorResult
    */
-  public TxProcessorResult processTx(Tx tx, TxProcessorSettings settings) {
+  public TxProcessorResult processTx(
+      Txos txos, float maxCjIntrafeesRatio, TxosLinkerOptionEnum... linkerOptions) {
     Set<TxosLinkerOptionEnum> options =
-        new HashSet<TxosLinkerOptionEnum>(Arrays.asList(settings.getOptions()));
+        new HashSet<TxosLinkerOptionEnum>(Arrays.asList(linkerOptions));
 
     // Builds lists of filtered input/output txos (with generated ids)
-    FilteredTxos filteredIns = filterTxos(tx.getTxos().getInputs(), TxProcessorConst.MARKER_INPUT);
-    FilteredTxos filteredOuts =
-        filterTxos(tx.getTxos().getOutputs(), TxProcessorConst.MARKER_OUTPUT);
+    FilteredTxos filteredIns = filterTxos(txos.getInputs(), TxProcessorConst.MARKER_INPUT);
+    FilteredTxos filteredOuts = filterTxos(txos.getOutputs(), TxProcessorConst.MARKER_OUTPUT);
 
     // Computes total input & output amounts + fees
     long sumInputs =
@@ -55,7 +70,7 @@ public class TxProcessor {
     } else {
       // Initializes the TxosLinker for this tx
       Txos filteredTxos = new Txos(filteredIns.getTxos(), filteredOuts.getTxos());
-      TxosLinker linker = new TxosLinker(fees, settings.getMaxDuration(), settings.getMaxTxos());
+      TxosLinker linker = new TxosLinker(fees, maxDuration, maxTxos);
 
       // Computes a list of sets of inputs controlled by a same address
       List<Set<String>> linkedIns = new ArrayList<Set<String>>();
@@ -72,7 +87,7 @@ public class TxProcessor {
       }
 
       // Computes intrafees to be used during processing
-      if (settings.getMaxCjIntrafeesRatio() > 0) {
+      if (maxCjIntrafeesRatio > 0) {
         // Computes a theoretic max number of participants
         List<Set<String>> lsFilteredIns = new LinkedList<Set<String>>();
         for (String txoId : filteredIns.getTxos().keySet()) {
@@ -95,9 +110,7 @@ public class TxProcessor {
         if (cjPattern != null) {
           intraFees =
               computeCoinjoinIntrafees(
-                  cjPattern.getNbPtcpts(),
-                  cjPattern.getCjAmount(),
-                  settings.getMaxCjIntrafeesRatio());
+                  cjPattern.getNbPtcpts(), cjPattern.getCjAmount(), maxCjIntrafeesRatio);
         }
       }
 
@@ -124,7 +137,7 @@ public class TxProcessor {
         result.getMatLnkCombinations(),
         result.computeMatLnkProbabilities(),
         result.computeEntropy(),
-        result.getDtrmLnks(),
+        result.getDtrmLnksById(),
         new Txos(txoIns, txoOuts),
         fees,
         intraFees,

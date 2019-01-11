@@ -1,6 +1,6 @@
 package com.samourai.efficiencyscore.processor;
 
-import com.samourai.efficiencyscore.beans.Tx;
+import com.samourai.efficiencyscore.beans.BoltzmannSettings;
 import com.samourai.efficiencyscore.beans.Txos;
 import com.samourai.efficiencyscore.linker.IntraFees;
 import com.samourai.efficiencyscore.linker.TxosLinkerOptionEnum;
@@ -10,7 +10,8 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class TxProcessorTest {
-  private TxProcessor txProcessor = new TxProcessor();
+  private TxProcessor txProcessor =
+      new TxProcessor(BoltzmannSettings.MAX_DURATION_DEFAULT, BoltzmannSettings.MAX_TXOS_DEFAULT);
 
   @Test
   public void testCheckCoinjoinPattern() {
@@ -47,14 +48,6 @@ public class TxProcessorTest {
 
   @Test
   public void entropyTest() {
-
-    TxProcessorSettings settings = new TxProcessorSettings();
-    settings.setOptions(
-        new TxosLinkerOptionEnum[] {
-          TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY
-        });
-    settings.setMaxCjIntrafeesRatio(0.005f);
-
     // 8e56317360a548e8ef28ec475878ef70d1371bee3526c017ac22ad61ae5740b8
     Map<String, Long> ins0 = new HashMap<String, Long>();
     ins0.put("1FJNUgMPRyBx6ahPmsH6jiYZHDWBPEHfU7", 10000000L);
@@ -67,9 +60,10 @@ public class TxProcessorTest {
     outs0.put("1ALKUqxRb2MeFqomLCqeYwDZK6FvLNnP3H", 100000L);
 
     Txos txos0 = new Txos(ins0, outs0);
-    Tx tx0 = new Tx(txos0);
 
-    TxProcessorResult result0 = txProcessor.processTx(tx0, settings);
+    TxProcessorResult result0 =
+        txProcessor.processTx(
+            txos0, 0.005f, TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY);
 
     Assert.assertEquals(1.5849625007211563f, result0.getEntropy(), 0.01f);
 
@@ -85,23 +79,15 @@ public class TxProcessorTest {
     outs1.put("bc1qj2pyuyx9rercqxvr0sk3mqwlqdrdw7v8dha", 2572242L);
 
     Txos txos1 = new Txos(ins1, outs1);
-    Tx tx1 = new Tx(txos1);
-
-    TxProcessorResult result1 = txProcessor.processTx(tx1, settings);
+    TxProcessorResult result1 =
+        txProcessor.processTx(
+            txos1, 0.005f, TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY);
 
     Assert.assertEquals(2.321928094887362f, result1.getEntropy(), 0.01f);
   }
 
   @Test
   public void efficiencyTest() {
-
-    TxProcessorSettings settings = new TxProcessorSettings();
-    settings.setOptions(
-        new TxosLinkerOptionEnum[] {
-          TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY
-        });
-    settings.setMaxCjIntrafeesRatio(0.005f);
-
     // 8e56317360a548e8ef28ec475878ef70d1371bee3526c017ac22ad61ae5740b8
     Map<String, Long> ins0 = new HashMap<String, Long>();
     ins0.put("1FJNUgMPRyBx6ahPmsH6jiYZHDWBPEHfU7", 10000000L);
@@ -114,9 +100,9 @@ public class TxProcessorTest {
     outs0.put("1ALKUqxRb2MeFqomLCqeYwDZK6FvLNnP3H", 100000L);
 
     Txos txos0 = new Txos(ins0, outs0);
-    Tx tx0 = new Tx(txos0);
-
-    TxProcessorResult result0 = txProcessor.processTx(tx0, settings);
+    TxProcessorResult result0 =
+        txProcessor.processTx(
+            txos0, 0.005f, TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY);
 
     Assert.assertEquals(0.42857142857142855f, result0.getEfficiency(), 0.01f);
 
@@ -132,9 +118,9 @@ public class TxProcessorTest {
     outs1.put("bc1qj2pyuyx9rercqxvr0sk3mqwlqdrdw7v8dha", 2572242L);
 
     Txos txos1 = new Txos(ins1, outs1);
-    Tx tx1 = new Tx(txos1);
-
-    TxProcessorResult result1 = txProcessor.processTx(tx1, settings);
+    TxProcessorResult result1 =
+        txProcessor.processTx(
+            txos1, 0.005f, TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY);
 
     Assert.assertEquals(0.7142857142857143f, result1.getEfficiency(), 0.01f);
   }

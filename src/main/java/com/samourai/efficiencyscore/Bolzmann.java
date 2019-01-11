@@ -1,19 +1,57 @@
-package com.samourai.efficiencyscore.client;
+package com.samourai.efficiencyscore;
 
 import com.google.common.math.DoubleMath;
+import com.samourai.efficiencyscore.beans.BoltzmannResult;
+import com.samourai.efficiencyscore.beans.BoltzmannSettings;
 import com.samourai.efficiencyscore.beans.Txos;
+import com.samourai.efficiencyscore.linker.TxosLinkerOptionEnum;
+import com.samourai.efficiencyscore.processor.TxProcessor;
 import com.samourai.efficiencyscore.processor.TxProcessorResult;
+import com.samourai.efficiencyscore.utils.ListsUtils;
 import java.util.Arrays;
-import java.util.Set;
+import java8.util.stream.LongStreams;
 
-public class Client {
+public class Bolzmann {
+  private BoltzmannSettings settings;
+  private TxProcessor txProcessor;
+
+  public Bolzmann() {
+    this(new BoltzmannSettings());
+  }
+
+  public Bolzmann(BoltzmannSettings settings) {
+    this.settings = settings;
+    this.txProcessor = new TxProcessor(settings.getMaxDuration(), settings.getMaxTxos());
+  }
+
+  public BoltzmannResult process(Txos txos) {
+    return process(txos, settings.getMaxCjIntrafeesRatio(), settings.getOptions());
+  }
+
+  public BoltzmannResult process(
+      Txos txos, float maxCjIntrafeesRatio, TxosLinkerOptionEnum... linkerOptions) {
+    long t1 = System.currentTimeMillis();
+
+    long sumInputs = LongStreams.of(ListsUtils.toPrimitiveArray(txos.getInputs().values())).sum();
+    long sumOutputs = LongStreams.of(ListsUtils.toPrimitiveArray(txos.getOutputs().values())).sum();
+    long fees = sumInputs - sumOutputs;
+    System.out.println("fees = " + fees);
+
+    TxProcessorResult txProcessorResult =
+        txProcessor.processTx(txos, maxCjIntrafeesRatio, linkerOptions);
+    BoltzmannResult result = new BoltzmannResult(txProcessorResult);
+    displayResults(result);
+
+    System.out.println("Duration = " + (System.currentTimeMillis() - t1) + "ms");
+    return result;
+  }
 
   /**
    * Displays the results for a given transaction
    *
    * @param result {@link TxProcessorResult}
    */
-  public void displayResults(TxProcessorResult result) {
+  protected void displayResults(BoltzmannResult result) {
     System.out.println("Inputs = " + result.getTxos().getInputs());
     System.out.println("Outputs = " + result.getTxos().getOutputs());
     System.out.println("Fees = " + result.getFees() + " satoshis");
@@ -62,28 +100,11 @@ public class Client {
     }
 
     System.out.println("Deterministic links :");
-    String[][] readableDtrmLnks = replaceDtrmLinks(result.getDtrmLnks(), result.getTxos());
+    String[][] readableDtrmLnks = result.getDtrmLnks();
     for (String[] dtrmLink : readableDtrmLnks) {
       String out = dtrmLink[0];
       String in = dtrmLink[1];
       System.out.println(in + " & " + out + " are deterministically linked");
     }
-  }
-
-  public String[][] replaceDtrmLinks(Set<int[]> dtrmLinks, Txos txos) {
-    String[][] result = new String[dtrmLinks.size()][2];
-
-    String[] outs = txos.getOutputs().keySet().toArray(new String[] {});
-    String[] ins = txos.getInputs().keySet().toArray(new String[] {});
-
-    int i = 0;
-    for (int[] dtrmLink : dtrmLinks) {
-      String out = outs[dtrmLink[0]];
-      String in = ins[dtrmLink[1]];
-      result[i] = new String[] {out, in};
-      i++;
-    }
-
-    return result;
   }
 }

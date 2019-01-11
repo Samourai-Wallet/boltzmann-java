@@ -55,12 +55,12 @@ public class TxosAggregator {
     // Creates a 1D array of values
     final Long[] allVal = txos.values().toArray(new Long[] {});
     List<Integer> allIndexes = new ArrayList<Integer>();
-    for (int i=0; i<txos.size(); i++) {
+    for (int i = 0; i < txos.size(); i++) {
       allIndexes.add(i);
     }
 
     //// int[][] allAgg = ListsUtils.powerSet(allVal);
-    int[][] allAggIndexes = ListsUtils.powerSet(allIndexes.toArray(new Integer[]{}));
+    int[][] allAggIndexes = ListsUtils.powerSet(allIndexes.toArray(new Integer[] {}));
     // int[] allAggVal = Arrays.stream(allAgg).mapToInt(array ->
     // Arrays.stream(array).sum()).toArray();
     List<Long> allAggVal = new LinkedList<Long>();

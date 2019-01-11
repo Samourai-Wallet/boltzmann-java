@@ -18,12 +18,12 @@ public class TxProcessorResult extends TxosLinkerResult {
       int[][] matLnkCombinations,
       double[][] matLnkProbabilities,
       Double entropy,
-      Set<int[]> dtrmLnks,
+      Set<int[]> dtrmLnksById,
       Txos txos,
       long fees,
       IntraFees intraFees,
       Double efficiency) {
-    super(nbCmbn, matLnkCombinations, dtrmLnks, txos);
+    super(nbCmbn, matLnkCombinations, dtrmLnksById, txos);
     this.matLnkProbabilities = matLnkProbabilities;
     this.entropy = entropy;
     this.fees = fees;

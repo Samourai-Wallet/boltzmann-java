@@ -1,22 +1,20 @@
 package com.samourai.efficiencyscore;
 
 import com.google.common.collect.Maps;
-import com.samourai.efficiencyscore.beans.Tx;
+import com.samourai.efficiencyscore.beans.BoltzmannResult;
 import com.samourai.efficiencyscore.beans.Txos;
-import com.samourai.efficiencyscore.client.Client;
-import com.samourai.efficiencyscore.linker.*;
-import com.samourai.efficiencyscore.processor.TxProcessor;
+import com.samourai.efficiencyscore.linker.IntraFees;
+import com.samourai.efficiencyscore.linker.TxosLinkerOptionEnum;
 import com.samourai.efficiencyscore.processor.TxProcessorResult;
-import com.samourai.efficiencyscore.processor.TxProcessorSettings;
-import com.samourai.efficiencyscore.utils.ListsUtils;
-import java.util.*;
-import java8.util.stream.LongStreams;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
 public class VectorsTest {
-  private Client client = new Client();
+  private Bolzmann boltzmann = new Bolzmann();
 
   @Ignore // TODO results ordering
   @Test
@@ -55,8 +53,6 @@ public class VectorsTest {
     long fees = 0;
     Double efficiency = 0.0;
 
-    TxProcessorSettings settings = new TxProcessorSettings();
-    settings.setMaxCjIntrafeesRatio(0);
     IntraFees intraFees = new IntraFees(0, 0);
     TxProcessorResult expected =
         new TxProcessorResult(
@@ -69,9 +65,8 @@ public class VectorsTest {
             fees,
             intraFees,
             efficiency);
-    processTest(inputs, outputs, settings, expected, expectedReadableDtrmLnks);
+    processTest(inputs, outputs, 0, expected, expectedReadableDtrmLnks);
 
-    settings.setMaxCjIntrafeesRatio(0.005f);
     intraFees = new IntraFees(0, 0);
     expected =
         new TxProcessorResult(
@@ -84,7 +79,7 @@ public class VectorsTest {
             fees,
             intraFees,
             efficiency);
-    processTest(inputs, outputs, settings, expected, expectedReadableDtrmLnks);
+    processTest(inputs, outputs, 0.005f, expected, expectedReadableDtrmLnks);
   }
 
   @Test
@@ -109,8 +104,6 @@ public class VectorsTest {
     long fees = 0;
     Double efficiency = 0.6666666666666666;
 
-    TxProcessorSettings settings = new TxProcessorSettings();
-    settings.setMaxCjIntrafeesRatio(0);
     IntraFees intraFees = new IntraFees(0, 0);
     TxProcessorResult expected =
         new TxProcessorResult(
@@ -123,9 +116,8 @@ public class VectorsTest {
             fees,
             intraFees,
             efficiency);
-    processTest(inputs, outputs, settings, expected, expectedReadableDtrmLnks);
+    processTest(inputs, outputs, 0, expected, expectedReadableDtrmLnks);
 
-    settings.setMaxCjIntrafeesRatio(0.005f);
     intraFees = new IntraFees(0, 0);
     expected =
         new TxProcessorResult(
@@ -138,7 +130,7 @@ public class VectorsTest {
             fees,
             intraFees,
             efficiency);
-    processTest(inputs, outputs, settings, expected, expectedReadableDtrmLnks);
+    processTest(inputs, outputs, 0.005f, expected, expectedReadableDtrmLnks);
   }
 
   @Test
@@ -172,8 +164,6 @@ public class VectorsTest {
     long fees = 60000;
     Double efficiency = 0.42857142857142854;
 
-    TxProcessorSettings settings = new TxProcessorSettings();
-    settings.setMaxCjIntrafeesRatio(0);
     IntraFees intraFees = new IntraFees(0, 0);
     TxProcessorResult expected =
         new TxProcessorResult(
@@ -186,9 +176,8 @@ public class VectorsTest {
             fees,
             intraFees,
             efficiency);
-    processTest(inputs, outputs, settings, expected, expectedReadableDtrmLnks);
+    processTest(inputs, outputs, 0, expected, expectedReadableDtrmLnks);
 
-    settings.setMaxCjIntrafeesRatio(0.005f);
     intraFees = new IntraFees(500, 500);
     expected =
         new TxProcessorResult(
@@ -201,7 +190,7 @@ public class VectorsTest {
             fees,
             intraFees,
             efficiency);
-    processTest(inputs, outputs, settings, expected, expectedReadableDtrmLnks);
+    processTest(inputs, outputs, 0.005f, expected, expectedReadableDtrmLnks);
   }
 
   @Ignore // TODO results ordering
@@ -287,8 +276,6 @@ public class VectorsTest {
     long fees = 2001;
     Double efficiency = 0.0;
 
-    TxProcessorSettings settings = new TxProcessorSettings();
-    settings.setMaxCjIntrafeesRatio(0);
     IntraFees intraFees = new IntraFees(0, 0);
     TxProcessorResult expected =
         new TxProcessorResult(
@@ -301,9 +288,8 @@ public class VectorsTest {
             fees,
             intraFees,
             efficiency);
-    processTest(inputs, outputs, settings, expected, expectedReadableDtrmLnks);
+    processTest(inputs, outputs, 0.005f, expected, expectedReadableDtrmLnks);
 
-    settings.setMaxCjIntrafeesRatio(0.005f);
     efficiency = 0.00026057666988501715;
     nbCmbn = 95;
     matLnkCombinations =
@@ -355,7 +341,7 @@ public class VectorsTest {
             fees,
             intraFees,
             efficiency);
-    processTest(inputs, outputs, settings, expected, expectedReadableDtrmLnks);
+    processTest(inputs, outputs, 0.005f, expected, expectedReadableDtrmLnks);
   }
 
   @Test
@@ -384,12 +370,6 @@ public class VectorsTest {
     long fees = 0;
     Double efficiency = 0.42857142857142854;
 
-    TxProcessorSettings settings = new TxProcessorSettings();
-    settings.setOptions(
-        new TxosLinkerOptionEnum[] {
-          TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY
-        });
-    settings.setMaxCjIntrafeesRatio(0);
     IntraFees intraFees = new IntraFees(0, 0);
     TxProcessorResult expected =
         new TxProcessorResult(
@@ -402,9 +382,8 @@ public class VectorsTest {
             fees,
             intraFees,
             efficiency);
-    processTest(inputs, outputs, settings, expected, expectedReadableDtrmLnks);
+    processTest(inputs, outputs, 0, expected, expectedReadableDtrmLnks);
 
-    settings.setMaxCjIntrafeesRatio(0.005f);
     intraFees = new IntraFees(0, 0);
     expected =
         new TxProcessorResult(
@@ -417,7 +396,7 @@ public class VectorsTest {
             fees,
             intraFees,
             efficiency);
-    processTest(inputs, outputs, settings, expected, expectedReadableDtrmLnks);
+    processTest(inputs, outputs, 0.005f, expected, expectedReadableDtrmLnks);
   }
 
   @Test
@@ -441,12 +420,6 @@ public class VectorsTest {
     long fees = 0;
     Double efficiency = 0.7142857142857143;
 
-    TxProcessorSettings settings = new TxProcessorSettings();
-    settings.setOptions(
-        new TxosLinkerOptionEnum[] {
-          TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY
-        });
-    settings.setMaxCjIntrafeesRatio(0);
     IntraFees intraFees = new IntraFees(0, 0);
     TxProcessorResult expected =
         new TxProcessorResult(
@@ -459,7 +432,7 @@ public class VectorsTest {
             fees,
             intraFees,
             efficiency);
-    processTest(inputs, outputs, settings, expected, expectedReadableDtrmLnks);
+    processTest(inputs, outputs, 0, expected, expectedReadableDtrmLnks);
   }
 
   @Test
@@ -486,12 +459,6 @@ public class VectorsTest {
     long fees = 0;
     Double efficiency = 0.42857142857142854;
 
-    TxProcessorSettings settings = new TxProcessorSettings();
-    settings.setOptions(
-        new TxosLinkerOptionEnum[] {
-          TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY
-        });
-    settings.setMaxCjIntrafeesRatio(0);
     IntraFees intraFees = new IntraFees(0, 0);
     TxProcessorResult expected =
         new TxProcessorResult(
@@ -504,7 +471,7 @@ public class VectorsTest {
             fees,
             intraFees,
             efficiency);
-    processTest(inputs, outputs, settings, expected, expectedReadableDtrmLnks);
+    processTest(inputs, outputs, 0, expected, expectedReadableDtrmLnks);
   }
 
   @Test
@@ -533,12 +500,6 @@ public class VectorsTest {
     long fees = 0;
     Double efficiency = 1.0;
 
-    TxProcessorSettings settings = new TxProcessorSettings();
-    settings.setOptions(
-        new TxosLinkerOptionEnum[] {
-          TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY
-        });
-    settings.setMaxCjIntrafeesRatio(0);
     IntraFees intraFees = new IntraFees(0, 0);
     TxProcessorResult expected =
         new TxProcessorResult(
@@ -551,7 +512,7 @@ public class VectorsTest {
             fees,
             intraFees,
             efficiency);
-    processTest(inputs, outputs, settings, expected, expectedReadableDtrmLnks);
+    processTest(inputs, outputs, 0, expected, expectedReadableDtrmLnks);
   }
 
   @Test
@@ -578,12 +539,6 @@ public class VectorsTest {
     long fees = 0;
     Double efficiency = 0.42857142857142854;
 
-    TxProcessorSettings settings = new TxProcessorSettings();
-    settings.setOptions(
-        new TxosLinkerOptionEnum[] {
-          TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY
-        });
-    settings.setMaxCjIntrafeesRatio(0);
     IntraFees intraFees = new IntraFees(0, 0);
     TxProcessorResult expected =
         new TxProcessorResult(
@@ -596,7 +551,7 @@ public class VectorsTest {
             fees,
             intraFees,
             efficiency);
-    processTest(inputs, outputs, settings, expected, expectedReadableDtrmLnks);
+    processTest(inputs, outputs, 0, expected, expectedReadableDtrmLnks);
   }
 
   @Test
@@ -629,12 +584,6 @@ public class VectorsTest {
     long fees = 0;
     Double efficiency = 0.20588235294117645;
 
-    TxProcessorSettings settings = new TxProcessorSettings();
-    settings.setOptions(
-        new TxosLinkerOptionEnum[] {
-          TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY
-        });
-    settings.setMaxCjIntrafeesRatio(0);
     IntraFees intraFees = new IntraFees(0, 0);
     TxProcessorResult expected =
         new TxProcessorResult(
@@ -647,7 +596,7 @@ public class VectorsTest {
             fees,
             intraFees,
             efficiency);
-    processTest(inputs, outputs, settings, expected, expectedReadableDtrmLnks);
+    processTest(inputs, outputs, 0, expected, expectedReadableDtrmLnks);
   }
 
   @Test
@@ -671,12 +620,6 @@ public class VectorsTest {
     long fees = 0;
     Double efficiency = 1.0;
 
-    TxProcessorSettings settings = new TxProcessorSettings();
-    settings.setOptions(
-        new TxosLinkerOptionEnum[] {
-          TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY
-        });
-    settings.setMaxCjIntrafeesRatio(0);
     IntraFees intraFees = new IntraFees(0, 0);
     TxProcessorResult expected =
         new TxProcessorResult(
@@ -689,7 +632,7 @@ public class VectorsTest {
             fees,
             intraFees,
             efficiency);
-    processTest(inputs, outputs, settings, expected, expectedReadableDtrmLnks);
+    processTest(inputs, outputs, 0, expected, expectedReadableDtrmLnks);
   }
 
   @Test
@@ -713,12 +656,6 @@ public class VectorsTest {
     long fees = 0;
     Double efficiency = 1.0;
 
-    TxProcessorSettings settings = new TxProcessorSettings();
-    settings.setOptions(
-        new TxosLinkerOptionEnum[] {
-          TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY
-        });
-    settings.setMaxCjIntrafeesRatio(0);
     IntraFees intraFees = new IntraFees(0, 0);
     TxProcessorResult expected =
         new TxProcessorResult(
@@ -731,7 +668,7 @@ public class VectorsTest {
             fees,
             intraFees,
             efficiency);
-    processTest(inputs, outputs, settings, expected, expectedReadableDtrmLnks);
+    processTest(inputs, outputs, 0, expected, expectedReadableDtrmLnks);
   }
 
   @Test
@@ -759,12 +696,6 @@ public class VectorsTest {
     long fees = 5;
     Double efficiency = 1.75;
 
-    TxProcessorSettings settings = new TxProcessorSettings();
-    settings.setOptions(
-        new TxosLinkerOptionEnum[] {
-          TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY
-        });
-    settings.setMaxCjIntrafeesRatio(0);
     IntraFees intraFees = new IntraFees(0, 0);
     TxProcessorResult expected =
         new TxProcessorResult(
@@ -777,7 +708,7 @@ public class VectorsTest {
             fees,
             intraFees,
             efficiency);
-    processTest(inputs, outputs, settings, expected, expectedReadableDtrmLnks);
+    processTest(inputs, outputs, 0, expected, expectedReadableDtrmLnks);
   }
 
   @Test
@@ -805,12 +736,6 @@ public class VectorsTest {
     long fees = 0;
     Double efficiency = 0.5625;
 
-    TxProcessorSettings settings = new TxProcessorSettings();
-    settings.setOptions(
-        new TxosLinkerOptionEnum[] {
-          TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY
-        });
-    settings.setMaxCjIntrafeesRatio(0);
     IntraFees intraFees = new IntraFees(0, 0);
     TxProcessorResult expected =
         new TxProcessorResult(
@@ -823,7 +748,7 @@ public class VectorsTest {
             fees,
             intraFees,
             efficiency);
-    processTest(inputs, outputs, settings, expected, expectedReadableDtrmLnks);
+    processTest(inputs, outputs, 0, expected, expectedReadableDtrmLnks);
   }
 
   @Test
@@ -855,12 +780,6 @@ public class VectorsTest {
     long fees = 0;
     Double efficiency = 1.0;
 
-    TxProcessorSettings settings = new TxProcessorSettings();
-    settings.setOptions(
-        new TxosLinkerOptionEnum[] {
-          TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY
-        });
-    settings.setMaxCjIntrafeesRatio(0);
     IntraFees intraFees = new IntraFees(0, 0);
     TxProcessorResult expected =
         new TxProcessorResult(
@@ -873,7 +792,7 @@ public class VectorsTest {
             fees,
             intraFees,
             efficiency);
-    processTest(inputs, outputs, settings, expected, expectedReadableDtrmLnks);
+    processTest(inputs, outputs, 0, expected, expectedReadableDtrmLnks);
   }
 
   @Test
@@ -944,12 +863,6 @@ public class VectorsTest {
     long fees = 0;
     Double efficiency = 1.0;
 
-    TxProcessorSettings settings = new TxProcessorSettings();
-    settings.setOptions(
-        new TxosLinkerOptionEnum[] {
-          TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY
-        });
-    settings.setMaxCjIntrafeesRatio(0);
     IntraFees intraFees = new IntraFees(0, 0);
     TxProcessorResult expected =
         new TxProcessorResult(
@@ -962,7 +875,7 @@ public class VectorsTest {
             fees,
             intraFees,
             efficiency);
-    processTest(inputs, outputs, settings, expected, expectedReadableDtrmLnks);
+    processTest(inputs, outputs, 0, expected, expectedReadableDtrmLnks);
   }
 
   @Test
@@ -1049,12 +962,6 @@ public class VectorsTest {
     long fees = 0;
     Double efficiency = 1.0;
 
-    TxProcessorSettings settings = new TxProcessorSettings();
-    settings.setOptions(
-        new TxosLinkerOptionEnum[] {
-          TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY
-        });
-    settings.setMaxCjIntrafeesRatio(0);
     IntraFees intraFees = new IntraFees(0, 0);
     TxProcessorResult expected =
         new TxProcessorResult(
@@ -1067,7 +974,7 @@ public class VectorsTest {
             fees,
             intraFees,
             efficiency);
-    processTest(inputs, outputs, settings, expected, expectedReadableDtrmLnks);
+    processTest(inputs, outputs, 0, expected, expectedReadableDtrmLnks);
   }
 
   @Test
@@ -1172,12 +1079,6 @@ public class VectorsTest {
     long fees = 0;
     Double efficiency = 1.0;
 
-    TxProcessorSettings settings = new TxProcessorSettings();
-    settings.setOptions(
-        new TxosLinkerOptionEnum[] {
-          TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY
-        });
-    settings.setMaxCjIntrafeesRatio(0);
     IntraFees intraFees = new IntraFees(0, 0);
     TxProcessorResult expected =
         new TxProcessorResult(
@@ -1190,7 +1091,7 @@ public class VectorsTest {
             fees,
             intraFees,
             efficiency);
-    processTest(inputs, outputs, settings, expected, expectedReadableDtrmLnks);
+    processTest(inputs, outputs, 0, expected, expectedReadableDtrmLnks);
   }
 
   @Test
@@ -1316,12 +1217,6 @@ public class VectorsTest {
     long fees = 0;
     Double efficiency = 1.0;
 
-    TxProcessorSettings settings = new TxProcessorSettings();
-    settings.setOptions(
-        new TxosLinkerOptionEnum[] {
-          TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY
-        });
-    settings.setMaxCjIntrafeesRatio(0);
     IntraFees intraFees = new IntraFees(0, 0);
     TxProcessorResult expected =
         new TxProcessorResult(
@@ -1334,7 +1229,7 @@ public class VectorsTest {
             fees,
             intraFees,
             efficiency);
-    processTest(inputs, outputs, settings, expected, expectedReadableDtrmLnks);
+    processTest(inputs, outputs, 0, expected, expectedReadableDtrmLnks);
   }
 
   @Test
@@ -1370,12 +1265,6 @@ public class VectorsTest {
     long fees = 0;
     Double efficiency = 1.0;
 
-    TxProcessorSettings settings = new TxProcessorSettings();
-    settings.setOptions(
-        new TxosLinkerOptionEnum[] {
-          TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY
-        });
-    settings.setMaxCjIntrafeesRatio(0);
     IntraFees intraFees = new IntraFees(0, 0);
     TxProcessorResult expected =
         new TxProcessorResult(
@@ -1388,7 +1277,7 @@ public class VectorsTest {
             fees,
             intraFees,
             efficiency);
-    processTest(inputs, outputs, settings, expected, expectedReadableDtrmLnks);
+    processTest(inputs, outputs, 0, expected, expectedReadableDtrmLnks);
   }
 
   @Test
@@ -1426,12 +1315,6 @@ public class VectorsTest {
     long fees = 0;
     Double efficiency = 1.0;
 
-    TxProcessorSettings settings = new TxProcessorSettings();
-    settings.setOptions(
-        new TxosLinkerOptionEnum[] {
-          TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY
-        });
-    settings.setMaxCjIntrafeesRatio(0);
     IntraFees intraFees = new IntraFees(0, 0);
     TxProcessorResult expected =
         new TxProcessorResult(
@@ -1444,29 +1327,23 @@ public class VectorsTest {
             fees,
             intraFees,
             efficiency);
-    processTest(inputs, outputs, settings, expected, expectedReadableDtrmLnks);
+    processTest(inputs, outputs, 0, expected, expectedReadableDtrmLnks);
   }
 
   private void processTest(
       Map<String, Long> inputs,
       Map<String, Long> outputs,
-      TxProcessorSettings txProcessorSettings,
+      float maxCjIntrafeesRatio,
       TxProcessorResult expected,
       String[][] expectedReadableDtrmLnks) {
-    long t1 = System.currentTimeMillis();
-    long sumInputs = LongStreams.of(ListsUtils.toPrimitiveArray(inputs.values())).sum();
-    long sumOutputs = LongStreams.of(ListsUtils.toPrimitiveArray(outputs.values())).sum();
-    long fees = sumInputs - sumOutputs;
-    System.out.println("fees = " + fees);
-
-    TxProcessor txProcessor = new TxProcessor();
 
     Txos txos = new Txos(inputs, outputs);
-    Tx tx = new Tx(txos);
-    TxProcessorResult result = txProcessor.processTx(tx, txProcessorSettings);
-    client.displayResults(result);
-
-    System.out.println("Duration = " + (System.currentTimeMillis() - t1) + "ms");
+    BoltzmannResult result =
+        boltzmann.process(
+            txos,
+            maxCjIntrafeesRatio,
+            TxosLinkerOptionEnum.PRECHECK,
+            TxosLinkerOptionEnum.LINKABILITY);
 
     Assert.assertEquals(expected.getNbCmbn(), result.getNbCmbn());
     Assert.assertTrue(
@@ -1474,12 +1351,8 @@ public class VectorsTest {
     Assert.assertTrue(
         Arrays.deepEquals(expected.getMatLnkProbabilities(), result.getMatLnkProbabilities()));
     // System.err.println(Arrays.deepToString(expectedReadableDtrmLnks));
-    // System.err.println(Arrays.deepToString(client.replaceDtrmLinks(result.getDtrmLnks(),
-    // result.getTxos())));
-    Assert.assertTrue(
-        Arrays.deepEquals(
-            expectedReadableDtrmLnks,
-            client.replaceDtrmLinks(result.getDtrmLnks(), result.getTxos())));
+    // System.err.println(Arrays.deepToString(result.getDtrmLnks(), result.getTxos())));
+    Assert.assertTrue(Arrays.deepEquals(expectedReadableDtrmLnks, result.getDtrmLnks()));
 
     Assert.assertTrue(
         Maps.difference(expected.getTxos().getInputs(), result.getTxos().getInputs()).areEqual());
