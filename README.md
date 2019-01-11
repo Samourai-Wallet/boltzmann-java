@@ -14,9 +14,8 @@ For a description of the metrics :
 - Bitcoin Transactions & Privacy (part 3) : https://gist.github.com/LaurentMT/e8644d5bc903f02613c6
 
 
-## Usage example
-
-See [src/test/java/com/samourai/boltzmann/Example.java](blob/develop/src/test/java/com/samourai/boltzmann/Example.java)
+## Usage
+See [src/test/java/com/samourai/boltzmann/Example.java](src/test/java/com/samourai/boltzmann/Example.java)
 
 
 ## Requirements
