@@ -13,5 +13,24 @@ For a description of the metrics :
 
 - Bitcoin Transactions & Privacy (part 3) : https://gist.github.com/LaurentMT/e8644d5bc903f02613c6
 
-Boltzmann is also available for Python: https://github.com/Samourai-Wallet/boltzmann
 
+## Usage example
+
+See [src/test/java/com/samourai/boltzmann/Example.java](blob/develop/src/test/java/com/samourai/boltzmann/Example.java)
+
+
+## Requirements
+Java >= 6 or Android API level >= 21
+
+
+## Build instructions
+Build with maven:
+
+```
+cd boltzmann-java
+mvn clean install -Dmaven.test.skip=true
+```
+
+
+## Resources
+Boltzmann is also available for Python: https://github.com/Samourai-Wallet/boltzmann
