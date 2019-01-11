@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/Samourai-Wallet/efficiency-score.svg?branch=develop)](https://travis-ci.org/Samourai-Wallet/efficiency-score)
+[![Build Status](https://travis-ci.org/Samourai-Wallet/boltzmann-java.svg?branch=develop)](https://travis-ci.org/Samourai-Wallet/boltzmann-java)
 [![](https://jitpack.io/v/Samourai-Wallet/boltzmann-java.svg)](https://jitpack.io/#Samourai-Wallet/boltzmann-java)
 
 # Boltzmann-Java
