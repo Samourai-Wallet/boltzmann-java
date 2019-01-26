@@ -14,15 +14,15 @@ public class TxProcessorResult extends TxosLinkerResult {
   private Double efficiency;
 
   public TxProcessorResult(
-      int nbCmbn,
-      int[][] matLnkCombinations,
-      double[][] matLnkProbabilities,
-      Double entropy,
-      Set<int[]> dtrmLnksById,
-      Txos txos,
-      long fees,
-      IntraFees intraFees,
-      Double efficiency) {
+          int nbCmbn,
+          int[][] matLnkCombinations,
+          double[][] matLnkProbabilities,
+          Double entropy,
+          Set<int[]> dtrmLnksById,
+          Txos txos,
+          long fees,
+          IntraFees intraFees,
+          Double efficiency) {
     super(nbCmbn, matLnkCombinations, dtrmLnksById, txos);
     this.matLnkProbabilities = matLnkProbabilities;
     this.entropy = entropy;
@@ -50,4 +50,21 @@ public class TxProcessorResult extends TxosLinkerResult {
   public Double getEfficiency() {
     return efficiency;
   }
+
+  public int getNbLinks() {
+    return getTxos().getInputs().size() * getTxos().getOutputs().size();
+  }
+
+  public int getNbDL() {
+    return getDtrmLnksById().size();
+  }
+
+  public Double getRatioDL() {
+    return ((double)getNbDL()) / (double)getNbLinks();
+  }
+
+  public Double getNRatioDL() {
+    return 1.0 - getRatioDL();
+  }
+
 }
