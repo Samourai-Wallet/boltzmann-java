@@ -14,7 +14,7 @@ public class Example {
     // settings.setXXX()
 
     // initialize Boltzmann
-    Bolzmann bolzmann = new Bolzmann(settings);
+    Boltzmann bolzmann = new Boltzmann(settings);
 
     // configure TXOS to process
     Txos txos = new Txos();

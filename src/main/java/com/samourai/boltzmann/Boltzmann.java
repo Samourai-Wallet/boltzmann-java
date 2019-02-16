@@ -11,15 +11,15 @@ import com.samourai.boltzmann.utils.ListsUtils;
 import java.util.Arrays;
 import java8.util.stream.LongStreams;
 
-public class Bolzmann {
+public class Boltzmann {
   private BoltzmannSettings settings;
   private TxProcessor txProcessor;
 
-  public Bolzmann() {
+  public Boltzmann() {
     this(new BoltzmannSettings());
   }
 
-  public Bolzmann(BoltzmannSettings settings) {
+  public Boltzmann(BoltzmannSettings settings) {
     this.settings = settings;
     this.txProcessor = new TxProcessor(settings.getMaxDuration(), settings.getMaxTxos());
   }
