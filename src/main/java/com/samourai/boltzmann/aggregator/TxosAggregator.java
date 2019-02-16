@@ -96,7 +96,7 @@ public class TxosAggregator {
     long[] allUniqueInAggVal = LongStreams.of(allInAggVal).distinct().sorted().toArray();
     long[] allUniqueOutAggVal = LongStreams.of(allOutAggVal).distinct().sorted().toArray();
 
-    Set<Integer> allMatchInAgg = new HashSet<Integer>();
+    List<Integer> allMatchInAgg = new ArrayList<Integer>();
     Map<Integer, Long> matchInAggToVal = new HashMap<Integer, Long>();
     Map<Long, List<Integer>> valToMatchOutAgg = new LinkedHashMap<Long, List<Integer>>();
 

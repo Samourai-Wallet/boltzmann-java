@@ -6,12 +6,12 @@ import java.util.Set;
 
 public class TxosAggregatesMatches {
 
-  private Set<Integer> allMatchInAgg;
+  private List<Integer> allMatchInAgg;
   private Map<Integer, Long> matchInAggToVal;
   private Map<Long, List<Integer>> valToMatchOutAgg;
 
   public TxosAggregatesMatches(
-      Set<Integer> allMatchInAgg,
+      List<Integer> allMatchInAgg,
       Map<Integer, Long> matchInAggToVal,
       Map<Long, List<Integer>> valToMatchOutAgg) {
     this.allMatchInAgg = allMatchInAgg;
@@ -19,7 +19,7 @@ public class TxosAggregatesMatches {
     this.valToMatchOutAgg = valToMatchOutAgg;
   }
 
-  public Set<Integer> getAllMatchInAgg() {
+  public List<Integer> getAllMatchInAgg() {
     return allMatchInAgg;
   }
 
