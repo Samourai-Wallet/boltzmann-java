@@ -14,7 +14,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 public class VectorsTest {
-  private Bolzmann boltzmann = new Bolzmann();
+  private Boltzmann boltzmann = new Boltzmann();
 
   @Ignore // TODO results ordering
   @Test
