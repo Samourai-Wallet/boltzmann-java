@@ -18,7 +18,7 @@ cy (part 1) : https://gist.github.com/LaurentMT/e758767ca4038ac40aaf
 ## Usage
 ### Run from command-line
 ```
-java -jar boltzmann-java-develop-SNAPSHOT-run.jar <txid> [maxCjIntrafeesRatio]
+java -jar target/boltzmann-java-develop-SNAPSHOT-run.jar <txid> [maxCjIntrafeesRatio]
 ```
 
 ### Developers

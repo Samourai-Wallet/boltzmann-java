@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.samourai.boltzmann.beans.Txos;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,7 +30,11 @@ public class ChainSoFetch {
     } else {
       // read fetch
       String url = "https://chain.so/api/v2/get_tx/BTC/" + txid;
-      obj = objectMapper.readTree(new URL(url));
+      try {
+        obj = objectMapper.readTree(new URL(url));
+      } catch (FileNotFoundException e) {
+        throw new RuntimeException("Transaction not found: " + txid);
+      }
     }
     JsonNode dataObj = obj.get("data");
 
