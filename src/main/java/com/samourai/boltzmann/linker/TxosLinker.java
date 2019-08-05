@@ -7,9 +7,12 @@ import com.samourai.boltzmann.aggregator.TxosAggregatorResult;
 import com.samourai.boltzmann.beans.Txos;
 import com.samourai.boltzmann.processor.TxProcessorConst;
 import com.samourai.boltzmann.utils.ListsUtils;
+import it.unimi.dsi.fastutil.ints.IntBigArrayBigList;
+import it.unimi.dsi.fastutil.ints.IntBigList;
+import it.unimi.dsi.fastutil.objects.ObjectBigArrayBigList;
+import it.unimi.dsi.fastutil.objects.ObjectBigList;
 import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -40,10 +43,10 @@ public class TxosLinker {
   private List<Pack> packs = new ArrayList<Pack>();
 
   // max number of txos. Txs with more than max_txos inputs or outputs are not processed.
-  int maxTxos;
+  Integer maxTxos;
 
   // Maximum duration of the script (in seconds)
-  int maxDuration = MAX_DURATION;
+  Integer maxDuration = MAX_DURATION;
 
   /**
    * Constructor.
@@ -53,7 +56,7 @@ public class TxosLinker {
    * @param maxTxos max number of txos. Txs with more than max_txos inputs or outputs are not
    *     processed.
    */
-  public TxosLinker(long fees, int maxDuration, int maxTxos) {
+  public TxosLinker(long fees, Integer maxDuration, Integer maxTxos) {
     this.feesOrig = fees;
     this.maxDuration = maxDuration;
     this.maxTxos = maxTxos;
@@ -100,8 +103,9 @@ public class TxosLinker {
 
     // Checks deterministic links
     int nbCmbn = 0;
-    int[][] matLnk = new int[nbOuts][nbIns];
-    Set<int[]> dtrmLnks = new LinkedHashSet<int[]>();
+    ObjectBigList<IntBigList> matLnk = ListsUtils.newIntMatrix(nbOuts, nbIns, 0);
+
+    Set<long[]> dtrmLnks = new LinkedHashSet<long[]>();
     if (options.contains(TxosLinkerOptionEnum.PRECHECK)
         && this.checkLimitOk(txos)
         && !hasIntraFees) {
@@ -117,9 +121,9 @@ public class TxosLinker {
       // If deterministic links have been found, fills the linkability matrix
       // (returned as result if linkability is not processed)
       if (!dtrmLnks.isEmpty()) {
-        final int[][] matLnkFinal = matLnk;
-        for (int[] dtrmLnk : dtrmLnks) {
-          matLnkFinal[dtrmLnk[0]][dtrmLnk[1]] = 1;
+        final ObjectBigList<IntBigList> matLnkFinal = matLnk;
+        for (long[] dtrmLnk : dtrmLnks) {
+          matLnkFinal.get(dtrmLnk[0]).set(dtrmLnk[1], 1);
         }
       }
     }
@@ -127,8 +131,8 @@ public class TxosLinker {
     // Checks if all inputs and outputs have already been merged
     if (nbIns == 0 || nbOuts == 0) {
       nbCmbn = 1;
-      for (int[] line : matLnk) {
-        Arrays.fill(line, 1);
+      for (IntBigList line : matLnk) {
+        ListsUtils.fill(line, 1, line.size64());
       }
     } else if (options.contains(TxosLinkerOptionEnum.LINKABILITY) && this.checkLimitOk(txos)) {
       // Packs deterministic links if needed
@@ -136,10 +140,10 @@ public class TxosLinker {
 
         final Txos txosFinal = txos;
         List<Set<String>> dtrmCoordsList = new ArrayList<Set<String>>();
-        for (int[] array : dtrmLnks) {
+        for (long[] array : dtrmLnks) {
           Set<String> set = new LinkedHashSet<String>();
-          set.add("" + txosFinal.getOutputs().keySet().toArray()[array[0]]);
-          set.add("" + txosFinal.getInputs().keySet().toArray()[array[1]]);
+          set.add("" + txosFinal.getOutputs().keySet().toArray()[(int) array[0]]); // TODO !!! cast
+          set.add("" + txosFinal.getInputs().keySet().toArray()[(int) array[1]]); // TODO !!! cast
           dtrmCoordsList.add(set);
         }
         txos = packLinkedTxos(dtrmCoordsList, txos);
@@ -151,7 +155,7 @@ public class TxosLinker {
       TxosAggregatesMatches aggMatches = aggregator.matchAggByVal(allAgg, fees, intraFees);
 
       // Computes a matrix storing a tree composed of valid pairs of input aggregates
-      Map<Integer, List<int[]>> matInAggCmbn = aggregator.computeInAggCmbn(aggMatches);
+      Map<Long, List<int[]>> matInAggCmbn = aggregator.computeInAggCmbn(aggMatches);
 
       // Builds the linkability matrix
       TxosAggregatorResult result =
@@ -223,8 +227,8 @@ public class TxosLinker {
    * @param txos packed txos containing the pack
    * @return UnpackLinkMatrixResult
    */
-  protected UnpackLinkMatrixResult unpackLinkMatrix(int[][] matLnk, Txos txos) {
-    int[][] matRes = matLnk.clone();
+  protected UnpackLinkMatrixResult unpackLinkMatrix(ObjectBigList<IntBigList> matLnk, Txos txos) {
+    ObjectBigList<IntBigList> matRes = new ObjectBigArrayBigList<IntBigList>(matLnk);
     Txos newTxos =
         new Txos(
             new LinkedHashMap<String, Long>(txos.getInputs()),
@@ -250,9 +254,9 @@ public class TxosLinker {
    * @return UnpackLinkMatrixResult
    */
   protected UnpackLinkMatrixResult unpackLinkMatrix(
-      final int[][] matLnk, Txos txos, final Pack pack) {
+      final ObjectBigList<IntBigList> matLnk, Txos txos, final Pack pack) {
 
-    int[][] newMatLnk = null;
+    ObjectBigList<IntBigList> newMatLnk = null;
     Txos newTxos = txos;
 
     if (matLnk != null) {
@@ -265,20 +269,23 @@ public class TxosLinker {
         // unpack matLnk
         int nbIns = txos.getInputs().size() + pack.getIns().size() - 1;
         int nbOuts = txos.getOutputs().size();
-        final int[][] newMatLnkFinal = new int[nbOuts][nbIns];
+        final ObjectBigList<IntBigList> newMatLnkFinal =
+            new ObjectBigArrayBigList<IntBigList>(nbOuts /*,nbIns*/);
         for (int i = 0; i < nbOuts; i++) {
+          IntBigList line = new IntBigArrayBigList(nbIns);
           for (int j = 0; j < nbIns; j++) {
             if (j < idx) {
               // keep values before pack
-              newMatLnkFinal[i][j] = matLnk[i][j];
+              line.add(j, matLnk.get(i).getInt(j));
             } else if (j >= (idx + pack.getIns().size())) {
               // keep values after pack
-              newMatLnkFinal[i][j] = matLnk[i][j - pack.getIns().size() + 1];
+              line.add(j, matLnk.get(i).getInt(j - pack.getIns().size() + 1));
             } else {
               // insert values for unpacked txos
-              newMatLnkFinal[i][j] = matLnk[i][idx];
+              line.add(j, matLnk.get(i).getInt(idx));
             }
           }
+          newMatLnkFinal.add(line);
         }
         newMatLnk = newMatLnkFinal;
       }
@@ -330,6 +337,10 @@ public class TxosLinker {
     int lenIn = txos.getInputs().size();
     int lenOut = txos.getOutputs().size();
     int maxCard = Math.max(lenIn, lenOut);
-    return (maxCard <= maxTxos);
+    if (maxTxos != null && maxCard > maxTxos) {
+      System.out.println("maxTxos limit reached!");
+      return false;
+    }
+    return true;
   }
 }

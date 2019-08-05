@@ -1,16 +1,18 @@
 package com.samourai.boltzmann.aggregator;
 
+import it.unimi.dsi.fastutil.objects.ObjectBigList;
 import java.util.Map;
 
 public class TxosAggregatesData {
 
   private Map<String, Long> txos;
-  private int[][]
+  private ObjectBigList<long[]>
       allAggIndexes; // each entry value contains array of txos indexes for corresponding
   // allAggVal[entry.key]
   private long[] allAggVal;
 
-  public TxosAggregatesData(Map<String, Long> txos, int[][] allAggIndexes, long[] allAggVal) {
+  public TxosAggregatesData(
+      Map<String, Long> txos, ObjectBigList<long[]> allAggIndexes, long[] allAggVal) {
     this.txos = txos;
     this.allAggIndexes = allAggIndexes;
     this.allAggVal = allAggVal;
@@ -20,7 +22,7 @@ public class TxosAggregatesData {
     return txos;
   }
 
-  public int[][] getAllAggIndexes() {
+  public ObjectBigList<long[]> getAllAggIndexes() {
     return allAggIndexes;
   }
 

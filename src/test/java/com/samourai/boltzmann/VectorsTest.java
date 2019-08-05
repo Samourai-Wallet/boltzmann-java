@@ -6,6 +6,7 @@ import com.samourai.boltzmann.beans.Txos;
 import com.samourai.boltzmann.linker.IntraFees;
 import com.samourai.boltzmann.linker.TxosLinkerOptionEnum;
 import com.samourai.boltzmann.processor.TxProcessorResult;
+import com.samourai.boltzmann.utils.ListsUtils;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -57,8 +58,8 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
@@ -71,8 +72,8 @@ public class VectorsTest {
     expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
@@ -108,8 +109,8 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
@@ -122,8 +123,8 @@ public class VectorsTest {
     expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
@@ -168,8 +169,8 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
@@ -182,8 +183,8 @@ public class VectorsTest {
     expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
@@ -280,8 +281,8 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
@@ -333,8 +334,8 @@ public class VectorsTest {
     expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
@@ -374,8 +375,8 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
@@ -388,8 +389,8 @@ public class VectorsTest {
     expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
@@ -424,8 +425,8 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
@@ -463,8 +464,8 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
@@ -504,8 +505,8 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
@@ -543,8 +544,8 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
@@ -588,8 +589,8 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
@@ -624,8 +625,8 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
@@ -660,8 +661,8 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
@@ -700,8 +701,8 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
@@ -740,8 +741,8 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
@@ -784,8 +785,8 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
@@ -867,8 +868,8 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
@@ -966,8 +967,8 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
@@ -1083,8 +1084,8 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
@@ -1221,8 +1222,8 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
@@ -1269,8 +1270,8 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
@@ -1319,8 +1320,8 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
@@ -1346,10 +1347,8 @@ public class VectorsTest {
             TxosLinkerOptionEnum.LINKABILITY);
 
     Assert.assertEquals(expected.getNbCmbn(), result.getNbCmbn());
-    Assert.assertTrue(
-        Arrays.deepEquals(expected.getMatLnkCombinations(), result.getMatLnkCombinations()));
-    Assert.assertTrue(
-        Arrays.deepEquals(expected.getMatLnkProbabilities(), result.getMatLnkProbabilities()));
+    Assert.assertTrue(expected.getMatLnkCombinations().equals(result.getMatLnkCombinations()));
+    Assert.assertTrue(expected.getMatLnkProbabilities().equals(result.getMatLnkProbabilities()));
     // System.err.println(Arrays.deepToString(expectedReadableDtrmLnks));
     // System.err.println(Arrays.deepToString(result.getDtrmLnks(), result.getTxos())));
     Assert.assertTrue(Arrays.deepEquals(expectedReadableDtrmLnks, result.getDtrmLnks()));

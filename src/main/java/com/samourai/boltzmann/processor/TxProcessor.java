@@ -21,10 +21,10 @@ import java.util.Set;
 import java8.util.stream.LongStreams;
 
 public class TxProcessor {
-  private int maxDuration;
-  private int maxTxos;
+  private Integer maxDuration;
+  private Integer maxTxos;
 
-  public TxProcessor(int maxDuration, int maxTxos) {
+  public TxProcessor(Integer maxDuration, Integer maxTxos) {
     this.maxDuration = maxDuration;
     this.maxTxos = maxTxos;
   }

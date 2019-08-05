@@ -1,6 +1,9 @@
 package com.samourai.boltzmann.linker;
 
 import com.samourai.boltzmann.beans.Txos;
+import com.samourai.boltzmann.utils.ListsUtils;
+import it.unimi.dsi.fastutil.ints.IntBigList;
+import it.unimi.dsi.fastutil.objects.ObjectBigList;
 import java.util.*;
 import java.util.Map.Entry;
 import org.junit.Assert;
@@ -283,11 +286,13 @@ public class TxosLinkerTest {
   }
 
   private void unpackLinkMatrix(
-      int[][] matLnk, Txos txos, Pack pack, int[][] expectedMatLnk, Txos expectedTxos) {
+      int[][] matLnkInt, Txos txos, Pack pack, int[][] expectedMatLnk, Txos expectedTxos) {
+
+    ObjectBigList<IntBigList> matLnk = ListsUtils.toBigList(matLnkInt);
     UnpackLinkMatrixResult result = txosLinker.unpackLinkMatrix(matLnk, txos, pack);
 
     Assert.assertEquals(expectedTxos.getInputs(), result.getTxos().getInputs());
     Assert.assertEquals(expectedTxos.getOutputs(), result.getTxos().getOutputs());
-    Assert.assertTrue(Arrays.deepEquals(expectedMatLnk, result.getMatLnk()));
+    Assert.assertTrue(ListsUtils.deepEquals(expectedMatLnk, result.getMatLnk()));
   }
 }

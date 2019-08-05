@@ -1,5 +1,12 @@
 package com.samourai.boltzmann.utils;
 
+import it.unimi.dsi.fastutil.BigList;
+import it.unimi.dsi.fastutil.doubles.DoubleBigArrayBigList;
+import it.unimi.dsi.fastutil.doubles.DoubleBigList;
+import it.unimi.dsi.fastutil.ints.IntBigArrayBigList;
+import it.unimi.dsi.fastutil.ints.IntBigList;
+import it.unimi.dsi.fastutil.objects.ObjectBigArrayBigList;
+import it.unimi.dsi.fastutil.objects.ObjectBigList;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -37,13 +44,38 @@ public class ListsUtils {
     return tmp_sets;
   }
 
-  public static int[][] powerSet(Integer[] a) {
-    int max = 1 << a.length;
-    int[][] result = new int[max][];
+  public static ObjectBigList<long[]> powerSet(Long[] a) {
+    /*int max = 1 << a.length;
+    long[][] result = new long[max][];
+    Set<Set<Long>> sets = Sets.powerSet(new HashSet<Long>(Arrays.asList(a)));
+    int i=0;
+    for (Set<Long> set : sets) {
+      // Long[] -> long[]
+      long[] line = StreamSupport.stream(set).mapToLong(new ToLongFunction<Long>() {
+        @Override
+        public long applyAsLong(Long aLong) {
+          return aLong;
+        }
+      }).toArray();
+      result[i] = line;
+      i++;
+    }
+    return result;*/
+    long max = 1L << a.length;
+    ObjectBigList<long[]> result = new ObjectBigArrayBigList<long[]>(max);
     for (int i = 0; i < max; ++i) {
-      result[i] = new int[Integer.bitCount(i)];
-      for (int j = 0, b = i, k = 0; j < a.length; ++j, b >>= 1)
-        if ((b & 1) != 0) result[i][k++] = a[j];
+      long[] line = new long[Long.bitCount(i)];
+      long b = i;
+      for (int j = 0, k = 0; j < a.length; ++j, b >>= 1) {
+        if ((b & 1) != 0) line[k++] = a[j];
+      }
+      result.add(line);
+    }
+
+    // consistency check
+    long expectedSize = (long) Math.pow(2, a.length);
+    if (expectedSize != result.size64()) {
+      throw new RuntimeException("powerSet size error: " + result.size64() + " vs " + expectedSize);
     }
     return result;
   }
@@ -78,5 +110,67 @@ public class ListsUtils {
       arr[i] = iter.next();
     }
     return arr;
+  }
+
+  public static ObjectBigList<IntBigList> newIntMatrix(long lines, long cols, int fillValue) {
+    ObjectBigList<IntBigList> matCmbn = new ObjectBigArrayBigList<IntBigList>(lines);
+    for (long i = 0; i < lines; i++) {
+      IntBigList line = ListsUtils.newIntBigList(cols, fillValue);
+      matCmbn.add(line);
+    }
+    return matCmbn;
+  }
+
+  public static IntBigList newIntBigList(long size, int fillValue) {
+    IntBigList line = new IntBigArrayBigList(size);
+    ListsUtils.fill(line, fillValue, size);
+    return line;
+  }
+
+  public static <T> void fill(BigList<T> bigList, T value, long size) {
+    for (long i = 0; i < size; i++) {
+      bigList.add(value);
+    }
+  }
+
+  public static boolean deepEquals(int[][] value, ObjectBigList<IntBigList> bigList) {
+    if (value.length != bigList.size64()) {
+      return false;
+    }
+    for (int i = 0; i < value.length; i++) {
+      if (!Arrays.equals(value[i], bigList.get(i).toArray(new int[] {}))) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  public static boolean deepEquals(long[][] value, ObjectBigList<long[]> bigList) {
+    if (value.length != bigList.size64()) {
+      return false;
+    }
+    for (int i = 0; i < value.length; i++) {
+      if (!Arrays.equals(value[i], bigList.get(i))) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  public static ObjectBigList<IntBigList> toBigList(int[][] matLnkInt) {
+    ObjectBigList<IntBigList> matLnk = new ObjectBigArrayBigList<IntBigList>(matLnkInt.length);
+    for (int i = 0; i < matLnkInt.length; i++) {
+      matLnk.add(IntBigArrayBigList.wrap(new int[][] {matLnkInt[i]}));
+    }
+    return matLnk;
+  }
+
+  public static ObjectBigList<DoubleBigList> toBigList(double[][] matLnkInt) {
+    ObjectBigList<DoubleBigList> matLnk =
+        new ObjectBigArrayBigList<DoubleBigList>(matLnkInt.length);
+    for (int i = 0; i < matLnkInt.length; i++) {
+      matLnk.add(DoubleBigArrayBigList.wrap(new double[][] {matLnkInt[i]}));
+    }
+    return matLnk;
   }
 }

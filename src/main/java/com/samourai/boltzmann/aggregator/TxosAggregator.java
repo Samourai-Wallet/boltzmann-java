@@ -3,21 +3,13 @@ package com.samourai.boltzmann.aggregator;
 import com.samourai.boltzmann.beans.Txos;
 import com.samourai.boltzmann.linker.IntraFees;
 import com.samourai.boltzmann.utils.ListsUtils;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import it.unimi.dsi.fastutil.ints.IntBigArrayBigList;
+import it.unimi.dsi.fastutil.ints.IntBigList;
+import it.unimi.dsi.fastutil.objects.ObjectBigArrayBigList;
+import it.unimi.dsi.fastutil.objects.ObjectBigList;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
-import java8.util.function.IntToLongFunction;
-import java8.util.stream.IntStreams;
+import java8.util.function.LongUnaryOperator;
 import java8.util.stream.LongStreams;
 
 public class TxosAggregator {
@@ -54,24 +46,24 @@ public class TxosAggregator {
 
     // Creates a 1D array of values
     final Long[] allVal = txos.values().toArray(new Long[] {});
-    List<Integer> allIndexes = new ArrayList<Integer>();
-    for (int i = 0; i < txos.size(); i++) {
+    List<Long> allIndexes = new ArrayList<Long>();
+    for (long i = 0; i < txos.size(); i++) {
       allIndexes.add(i);
     }
 
     //// int[][] allAgg = ListsUtils.powerSet(allVal);
-    int[][] allAggIndexes = ListsUtils.powerSet(allIndexes.toArray(new Integer[] {}));
+    ObjectBigList<long[]> allAggIndexes = ListsUtils.powerSet(allIndexes.toArray(new Long[] {}));
     // int[] allAggVal = Arrays.stream(allAgg).mapToInt(array ->
     // Arrays.stream(array).sum()).toArray();
     List<Long> allAggVal = new LinkedList<Long>();
-    for (int[] array : allAggIndexes) {
+    for (long[] array : allAggIndexes) {
       allAggVal.add(
-          IntStreams.of(array)
-              .mapToLong(
-                  new IntToLongFunction() {
+          LongStreams.of(array)
+              .map(
+                  new LongUnaryOperator() {
                     @Override
-                    public long applyAsLong(int indice) {
-                      return allVal[indice];
+                    public long applyAsLong(long indice) {
+                      return allVal[(int) indice]; // TODO !!! cast
                     }
                   })
               .sum());
@@ -160,13 +152,13 @@ public class TxosAggregator {
    * child_agg1 & child_agg2 = 0 (no bitwise overlap) R2/ child_agg1 > child_agg2 (matrix is
    * symmetric)
    */
-  public Map<Integer, List<int[]>> computeInAggCmbn(TxosAggregatesMatches aggMatches) {
+  public Map<Long, List<int[]>> computeInAggCmbn(TxosAggregatesMatches aggMatches) {
 
     // aggs = allMatchInAgg[1:-1]
     LinkedList<Integer> aggs = new LinkedList<Integer>(aggMatches.getAllMatchInAgg());
     aggs.pollFirst(); // remove 0
 
-    Map<Integer, List<int[]>> mat = new LinkedHashMap<Integer, List<int[]>>();
+    Map<Long, List<int[]>> mat = new LinkedHashMap<Long, List<int[]>>();
     if (!aggs.isEmpty()) {
       int tgt = aggs.pollLast();
 
@@ -175,10 +167,10 @@ public class TxosAggregator {
           int jMax = Math.min(i, tgt - i + 1);
           for (int j = 0; j < jMax; j++) {
             if ((i & j) == 0 && aggs.contains(j)) {
-              List<int[]> aggChilds = mat.get(i + j);
+              List<int[]> aggChilds = mat.get((long) i + j);
               if (aggChilds == null) {
                 aggChilds = new ArrayList<int[]>();
-                mat.put(i + j, aggChilds);
+                mat.put((long) i + j, aggChilds);
               }
               aggChilds.add(new int[] {i, j});
             }
@@ -194,13 +186,14 @@ public class TxosAggregator {
    *
    * @return list of deterministic links as tuples (idx_output, idx_input)
    */
-  public Set<int[]> checkDtrmLinks(
+  public Set<long[]> checkDtrmLinks(
       Txos txos, TxosAggregates allAgg, TxosAggregatesMatches aggMatches) {
     int nbIns = txos.getInputs().size();
     int nbOuts = txos.getOutputs().size();
 
-    int[][] matCmbn = new int[nbOuts][nbIns];
-    int[] inCmbn = new int[nbIns];
+    ObjectBigList<IntBigList> matCmbn = ListsUtils.newIntMatrix(nbOuts, nbIns, 0);
+
+    IntBigList inCmbn = ListsUtils.newIntBigList(nbIns, 0);
     for (Map.Entry<Integer, Long> inEntry : aggMatches.getMatchInAggToVal().entrySet()) {
       int inIdx = inEntry.getKey();
       long val = inEntry.getValue();
@@ -209,27 +202,27 @@ public class TxosAggregator {
         updateLinkCmbn(matCmbn, inIdx, outIdx, allAgg);
 
         // Computes sum of combinations along inputs axis to get the number of combinations
-        int[] inIndexes = allAgg.getInAgg().getAllAggIndexes()[inIdx];
-        for (int inIndex : inIndexes) {
-          inCmbn[inIndex]++;
+        long[] inIndexes = allAgg.getInAgg().getAllAggIndexes().get(inIdx);
+        for (long inIndex : inIndexes) {
+          int currentValue = inCmbn.getInt(inIndex);
+          inCmbn.set(inIndex, currentValue + 1);
         }
       }
     }
 
     // Builds a list of sets storing inputs having a deterministic link with an output
-    int nbCmbn = inCmbn[0];
-    Set<int[]> dtrmCoords = findDtrmLinks(matCmbn, nbCmbn);
+    int nbCmbn = inCmbn.getInt(0);
+    Set<long[]> dtrmCoords = findDtrmLinks(matCmbn, nbCmbn);
     return dtrmCoords;
   }
 
   private class ComputeLinkMatrixTask {
     private int idxIl;
-    private int il;
-    private int ir;
-    private Map<Integer, Map<Integer, int[]>> dOut;
+    private long il;
+    private long ir;
+    private Map<Long, Map<Long, int[]>> dOut;
 
-    public ComputeLinkMatrixTask(
-        int idxIl, int il, int ir, Map<Integer, Map<Integer, int[]>> dOut) {
+    public ComputeLinkMatrixTask(int idxIl, long il, long ir, Map<Long, Map<Long, int[]>> dOut) {
       this.idxIl = idxIl;
       this.il = il;
       this.ir = ir;
@@ -244,15 +237,15 @@ public class TxosAggregator {
       this.idxIl = idxIl;
     }
 
-    public int getIl() {
+    public long getIl() {
       return il;
     }
 
-    public int getIr() {
+    public long getIr() {
       return ir;
     }
 
-    public Map<Integer, Map<Integer, int[]>> getdOut() {
+    public Map<Long, Map<Long, int[]>> getdOut() {
       return dOut;
     }
   }
@@ -269,12 +262,12 @@ public class TxosAggregator {
       Txos txos,
       TxosAggregates allAgg,
       TxosAggregatesMatches aggMatches,
-      Map<Integer, List<int[]>> matInAggCmbn,
-      int maxDuration) {
+      Map<Long, List<int[]>> matInAggCmbn,
+      Integer maxDuration) {
     int nbTxCmbn = 0;
-    int itGt = (int) Math.pow(2, txos.getInputs().size()) - 1; // TODO int
-    int otGt = (int) Math.pow(2, txos.getOutputs().size()) - 1;
-    Map<int[], Integer> dLinks = new LinkedHashMap<int[], Integer>();
+    long itGt = (long) Math.pow(2, txos.getInputs().size()) - 1;
+    long otGt = (long) Math.pow(2, txos.getOutputs().size()) - 1;
+    Map<long[], Integer> dLinks = new LinkedHashMap<long[], Integer>();
 
     // Initializes a stack of tasks & sets the initial task
     //  0: index used to resume the processing of the task (required for depth-first algorithm)
@@ -287,10 +280,9 @@ public class TxosAggregator {
     Deque<ComputeLinkMatrixTask> stack = new LinkedList<ComputeLinkMatrixTask>();
 
     // ini_d_out[otgt] = { 0: (1, 0) }
-    Map<Integer, Map<Integer, int[]>> dOutInitial =
-        new LinkedHashMap<Integer, Map<Integer, int[]>>();
-    Map<Integer, int[]> dOutEntry = new LinkedHashMap<Integer, int[]>();
-    dOutEntry.put(0, new int[] {1, 0});
+    Map<Long, Map<Long, int[]>> dOutInitial = new LinkedHashMap<Long, Map<Long, int[]>>();
+    Map<Long, int[]> dOutEntry = new LinkedHashMap<Long, int[]>();
+    dOutEntry.put(0L, new int[] {1, 0});
     dOutInitial.put(otGt, dOutEntry);
 
     stack.add(new ComputeLinkMatrixTask(0, 0, itGt, dOutInitial));
@@ -303,7 +295,8 @@ public class TxosAggregator {
       // Checks duration
       long currTime = System.currentTimeMillis();
       long deltaTimeSeconds = (currTime - startTime) / 1000;
-      if (deltaTimeSeconds >= maxDuration) {
+      if (maxDuration != null && deltaTimeSeconds >= maxDuration) {
+        System.out.println("maxDuration limit reached!");
         return new TxosAggregatorResult(0, null);
       }
 
@@ -317,7 +310,7 @@ public class TxosAggregator {
 
       for (int i = t.getIdxIl(); i < lenIrcs; i++) {
         nIdxIl = i;
-        Map<Integer, Map<Integer, int[]>> ndOut = new LinkedHashMap<Integer, Map<Integer, int[]>>();
+        Map<Long, Map<Long, int[]>> ndOut = new LinkedHashMap<Long, Map<Long, int[]>>();
 
         // Gets left input sub-aggregate (column from ircs)
         int nIl = ircs.get(i)[1];
@@ -328,9 +321,9 @@ public class TxosAggregator {
           int nIr = ircs.get(i)[0];
 
           // Iterates over outputs combinations previously found
-          for (Map.Entry<Integer, Map<Integer, int[]>> oREntry : t.getdOut().entrySet()) {
-            int oR = oREntry.getKey();
-            int sol = otGt - oR;
+          for (Map.Entry<Long, Map<Long, int[]>> oREntry : t.getdOut().entrySet()) {
+            long oR = oREntry.getKey();
+            long sol = otGt - oR;
 
             // Computes the number of parent combinations
             int nbPrt = 0;
@@ -340,24 +333,24 @@ public class TxosAggregator {
 
             // Iterates over output sub-aggregates matching with left input sub-aggregate
             long valIl = aggMatches.getMatchInAggToVal().get(nIl);
-            for (int nOl : aggMatches.getValToMatchOutAgg().get(valIl)) {
+            for (long nOl : aggMatches.getValToMatchOutAgg().get(valIl)) {
               // Checks compatibility of output sub-aggregate with left part of output combination
               if ((sol & nOl) == 0) {
                 // Computes:
                 //   the sum corresponding to the left part of the output combination
                 //   the complementary right output sub-aggregate
-                int nSol = sol + nOl;
-                int nOr = otGt - nSol;
+                long nSol = sol + nOl;
+                long nOr = otGt - nSol;
 
                 // Checks if the right output sub-aggregate is valid
                 long valIr = aggMatches.getMatchInAggToVal().get(nIr);
                 List<Integer> matchOutAgg = aggMatches.getValToMatchOutAgg().get(valIr);
 
                 // Adds this output combination into n_d_out if all conditions met
-                if ((nSol & nOr) == 0 && matchOutAgg.contains(nOr)) {
-                  Map<Integer, int[]> ndOutVal = ndOut.get(nOr);
+                if ((nSol & nOr) == 0 && matchOutAgg.contains((int) nOr)) { // TODO !!! CAST
+                  Map<Long, int[]> ndOutVal = ndOut.get(nOr);
                   if (ndOutVal == null) {
-                    ndOutVal = new LinkedHashMap<Integer, int[]>();
+                    ndOutVal = new LinkedHashMap<Long, int[]>();
                     ndOut.put(nOr, ndOutVal);
                   }
                   ndOutVal.put(nOl, new int[] {nbPrt, 0});
@@ -389,24 +382,24 @@ public class TxosAggregator {
         // Checks if it's the root task
         if (stack.isEmpty()) {
           // Retrieves the number of combinations from root task
-          nbTxCmbn = t.getdOut().get(otGt).get(0)[1];
+          nbTxCmbn = t.getdOut().get(otGt).get(0L)[1];
         } else {
           // Gets parent task
           ComputeLinkMatrixTask pt = stack.getLast();
 
           // Iterates over all entries from d_out
-          for (Map.Entry<Integer, Map<Integer, int[]>> doutEntry : t.getdOut().entrySet()) {
-            int or = doutEntry.getKey();
-            Map<Integer, int[]> lOl = doutEntry.getValue();
-            int[] rKey = new int[] {t.getIr(), or};
+          for (Map.Entry<Long, Map<Long, int[]>> doutEntry : t.getdOut().entrySet()) {
+            long or = doutEntry.getKey();
+            Map<Long, int[]> lOl = doutEntry.getValue();
+            long[] rKey = new long[] {t.getIr(), or};
 
             // Iterates over all left aggregates
-            for (Map.Entry<Integer, int[]> olEntry : lOl.entrySet()) {
-              int ol = olEntry.getKey();
+            for (Map.Entry<Long, int[]> olEntry : lOl.entrySet()) {
+              long ol = olEntry.getKey();
               int nbPrnt = olEntry.getValue()[0];
               int nbChld = olEntry.getValue()[1];
 
-              int[] lKey = new int[] {t.getIl(), ol};
+              long[] lKey = new long[] {t.getIl(), ol};
 
               // Updates the dictionary of links for the pair of aggregates
               int nbOccur = nbChld + 1;
@@ -415,10 +408,10 @@ public class TxosAggregator {
                   lKey, (dLinks.containsKey(lKey) ? dLinks.get(lKey) : 0) + nbPrnt * nbOccur);
 
               // Updates parent d_out by back-propagating number of child combinations
-              int pOr = ol + or;
-              Map<Integer, int[]> plOl = pt.getdOut().get(pOr);
-              for (Map.Entry<Integer, int[]> plOlEntry : plOl.entrySet()) {
-                int pOl = plOlEntry.getKey();
+              long pOr = ol + or;
+              Map<Long, int[]> plOl = pt.getdOut().get(pOr);
+              for (Map.Entry<Long, int[]> plOlEntry : plOl.entrySet()) {
+                long pOl = plOlEntry.getKey();
                 int pNbPrt = plOlEntry.getValue()[0];
                 int pNbChld = plOlEntry.getValue()[1];
                 pt.getdOut().get(pOr).put(pOl, new int[] {pNbPrt, pNbChld + nbOccur});
@@ -430,17 +423,18 @@ public class TxosAggregator {
     }
 
     // Fills the matrix
-    int[][] links = newLinkCmbn(allAgg);
+    ObjectBigList<IntBigList> links = newLinkCmbn(allAgg);
     updateLinkCmbn(links, itGt, otGt, allAgg);
     nbTxCmbn++;
-    for (Map.Entry<int[], Integer> linkEntry : dLinks.entrySet()) {
-      int[] link = linkEntry.getKey();
+    for (Map.Entry<long[], Integer> linkEntry : dLinks.entrySet()) {
+      long[] link = linkEntry.getKey();
       int mult = linkEntry.getValue();
-      int[][] linkCmbn = newLinkCmbn(allAgg);
+      ObjectBigList<IntBigList> linkCmbn = newLinkCmbn(allAgg);
       updateLinkCmbn(linkCmbn, link[0], link[1], allAgg);
-      for (int i = 0; i < links.length; i++) {
-        for (int j = 0; j < links[i].length; j++) {
-          links[i][j] += linkCmbn[i][j] * mult;
+      for (long i = 0; i < links.size64(); i++) {
+        for (long j = 0; j < links.get(i).size64(); j++) {
+          int currentValue = links.get(i).getInt(j);
+          links.get(i).set(j, currentValue + linkCmbn.get(i).getInt(j) * mult);
         }
       }
     }
@@ -452,23 +446,27 @@ public class TxosAggregator {
    *
    * @param allAgg
    */
-  private int[][] newLinkCmbn(TxosAggregates allAgg) {
-    int maxOutIndex = 0;
-    for (int[] indexes : allAgg.getOutAgg().getAllAggIndexes()) {
-      int max = IntStreams.of(indexes).max().orElse(0);
+  private ObjectBigList<IntBigList> newLinkCmbn(TxosAggregates allAgg) {
+    long maxOutIndex = 0;
+    for (long[] indexes : allAgg.getOutAgg().getAllAggIndexes()) {
+      long max = LongStreams.of(indexes).max().orElse(0);
       if (max > maxOutIndex) {
         maxOutIndex = max;
       }
     }
 
-    int maxInIndex = 0;
-    for (int[] indexes : allAgg.getInAgg().getAllAggIndexes()) {
-      int max = IntStreams.of(indexes).max().orElse(0);
+    long maxInIndex = 0;
+    for (long[] indexes : allAgg.getInAgg().getAllAggIndexes()) {
+      long max = LongStreams.of(indexes).max().orElse(0);
       if (max > maxInIndex) {
         maxInIndex = max;
       }
     }
-    int[][] matCmbn = new int[maxOutIndex + 1][maxInIndex + 1];
+
+    // System.err.println("outAgg="+Arrays.deepToString(allAgg.getOutAgg().getAllAggIndexes().values().toArray()));
+    // System.err.println("inAgg="+Arrays.deepToString(allAgg.getInAgg().getAllAggIndexes().values().toArray()));
+    // System.err.println("maxOutIndex="+maxOutIndex+", maxInIndex="+maxInIndex);
+    ObjectBigList<IntBigList> matCmbn = ListsUtils.newIntMatrix(maxOutIndex + 1, maxInIndex + 1, 0);
     return matCmbn;
   }
 
@@ -480,13 +478,15 @@ public class TxosAggregator {
    * @param outAgg output aggregate
    * @param allAgg
    */
-  private int[][] updateLinkCmbn(int[][] matCmbn, int inAgg, int outAgg, TxosAggregates allAgg) {
-    int[] outIndexes = allAgg.getOutAgg().getAllAggIndexes()[outAgg];
-    int[] inIndexes = allAgg.getInAgg().getAllAggIndexes()[inAgg];
+  private ObjectBigList<IntBigList> updateLinkCmbn(
+      ObjectBigList<IntBigList> matCmbn, long inAgg, long outAgg, TxosAggregates allAgg) {
+    long[] outIndexes = allAgg.getOutAgg().getAllAggIndexes().get(outAgg);
+    long[] inIndexes = allAgg.getInAgg().getAllAggIndexes().get(inAgg);
 
-    for (int inIndex : inIndexes) {
-      for (int outIndex : outIndexes) {
-        matCmbn[outIndex][inIndex]++;
+    for (long inIndex : inIndexes) {
+      for (long outIndex : outIndexes) {
+        int value = matCmbn.get(outIndex).getInt(inIndex);
+        matCmbn.get(outIndex).set(inIndex, value + 1);
       }
     }
     return matCmbn;
@@ -499,12 +499,12 @@ public class TxosAggregator {
    * @param nbCmbn number of combination
    * @return
    */
-  public Set<int[]> findDtrmLinks(int[][] matCmbn, int nbCmbn) {
-    Set<int[]> dtrmCoords = new LinkedHashSet<int[]>();
-    for (int i = 0; i < matCmbn.length; i++) {
-      for (int j = 0; j < matCmbn[i].length; j++) {
-        if (matCmbn[i][j] == nbCmbn) {
-          dtrmCoords.add(new int[] {i, j});
+  public Set<long[]> findDtrmLinks(ObjectBigList<IntBigList> matCmbn, int nbCmbn) {
+    Set<long[]> dtrmCoords = new LinkedHashSet<long[]>();
+    for (long i = 0; i < matCmbn.size64(); i++) {
+      for (long j = 0; j < matCmbn.get(i).size64(); j++) {
+        if (matCmbn.get(i).getInt(j) == nbCmbn) {
+          dtrmCoords.add(new long[] {i, j});
         }
       }
     }
