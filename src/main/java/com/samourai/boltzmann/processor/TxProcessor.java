@@ -19,8 +19,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java8.util.stream.LongStreams;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TxProcessor {
+  private static final Logger log = LoggerFactory.getLogger(TxProcessor.class);
+
   private Integer maxDuration;
   private Integer maxTxos;
 
@@ -42,6 +46,15 @@ public class TxProcessor {
       Txos txos, float maxCjIntrafeesRatio, TxosLinkerOptionEnum... linkerOptions) {
     Set<TxosLinkerOptionEnum> options =
         new HashSet<TxosLinkerOptionEnum>(Arrays.asList(linkerOptions));
+
+    if (log.isDebugEnabled()) {
+      log.debug(
+          "Processing tx: "
+              + txos.getInputs().size()
+              + " inputs, "
+              + txos.getOutputs().size()
+              + " outputs");
+    }
 
     // Builds lists of filtered input/output txos (with generated ids)
     FilteredTxos filteredIns = filterTxos(txos.getInputs(), TxProcessorConst.MARKER_INPUT);
@@ -377,7 +390,8 @@ public class TxProcessor {
       return null;
     }
 
-    // Checks if we can use precomputed values
+    // Checks if we can use
+    // precomputed values
     if (nbIns <= 1 || nbOuts <= 1) {
       return 1.0;
     } else if (nbIns <= 20 && nbOuts <= 60) {

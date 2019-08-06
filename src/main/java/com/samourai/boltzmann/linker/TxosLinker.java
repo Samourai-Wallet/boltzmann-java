@@ -99,16 +99,18 @@ public class TxosLinker {
     int nbCmbn = 0;
     ObjectBigList<IntBigList> matLnk = ListsUtils.newIntMatrix(nbOuts, nbIns, 0);
 
+    // Prepares the data
+    TxosAggregates allAgg = prepareData(txos);
+    txos = new Txos(allAgg.getInAgg().getTxos(), allAgg.getOutAgg().getTxos());
+    TxosAggregatesMatches aggMatches = aggregator.matchAggByVal(allAgg, fees, intraFees);
+
     Set<long[]> dtrmLnks = new LinkedHashSet<long[]>();
     if (options.contains(TxosLinkerOptionEnum.PRECHECK)
         && this.checkLimitOk(txos)
         && !hasIntraFees) {
-
-      // Prepares the data
-      TxosAggregates allAgg = prepareData(txos);
-
-      txos = new Txos(allAgg.getInAgg().getTxos(), allAgg.getOutAgg().getTxos());
-      TxosAggregatesMatches aggMatches = aggregator.matchAggByVal(allAgg, fees, intraFees);
+      if (log.isDebugEnabled()) {
+        Utils.logMemory("# PRECHECK");
+      }
 
       // Checks deterministic links
       dtrmLnks = aggregator.checkDtrmLinks(txos, allAgg, aggMatches);
@@ -130,9 +132,13 @@ public class TxosLinker {
         ListsUtils.fill(line, 1, line.size64());
       }
     } else if (options.contains(TxosLinkerOptionEnum.LINKABILITY) && this.checkLimitOk(txos)) {
+      if (log.isDebugEnabled()) {
+        Utils.logMemory("# LINKABILITY");
+      }
+
       // Packs deterministic links if needed
       if (!dtrmLnks.isEmpty()) {
-
+        Utils.logMemory("PACK " + dtrmLnks.size() + " deterministic links");
         final Txos txosFinal = txos;
         List<Set<String>> dtrmCoordsList = new ArrayList<Set<String>>();
         for (long[] array : dtrmLnks) {
@@ -142,12 +148,12 @@ public class TxosLinker {
           dtrmCoordsList.add(set);
         }
         txos = packLinkedTxos(dtrmCoordsList, txos);
-      }
 
-      // Prepares data
-      TxosAggregates allAgg = prepareData(txos);
-      txos = new Txos(allAgg.getInAgg().getTxos(), allAgg.getOutAgg().getTxos());
-      TxosAggregatesMatches aggMatches = aggregator.matchAggByVal(allAgg, fees, intraFees);
+        // txos changed, recompute allAgg
+        allAgg = prepareData(txos);
+        txos = new Txos(allAgg.getInAgg().getTxos(), allAgg.getOutAgg().getTxos());
+        aggMatches = aggregator.matchAggByVal(allAgg, fees, intraFees);
+      }
 
       // Computes a matrix storing a tree composed of valid pairs of input aggregates
       Map<Long, List<int[]>> matInAggCmbn = aggregator.computeInAggCmbn(aggMatches);
@@ -163,6 +169,9 @@ public class TxosLinker {
     }
 
     if (!packs.isEmpty()) {
+      if (log.isDebugEnabled()) {
+        Utils.logMemory("# UNPACK " + packs.size() + " packs");
+      }
       // Unpacks the matrix
       UnpackLinkMatrixResult unpackResult = unpackLinkMatrix(matLnk, txos);
       txos = unpackResult.getTxos();
@@ -368,18 +377,12 @@ public class TxosLinker {
       double MB_PER_AGGREGATE = 0.0001;
       long nbAggregates = (long) Math.pow(2, allIndexes.size());
       long memoryRequired = (long) (nbAggregates * MB_PER_AGGREGATE);
-      log.debug(
-          "Initializing aggregates ("
-              + memoryRequired
-              + "MB required, "
-              + nbAggregates
-              + " aggregates)");
-      Utils.logMemory();
+      if (log.isDebugEnabled()) {
+        Utils.logMemory(
+            "Computing aggregates: " + nbAggregates + " (" + memoryRequired + "MB est.)");
+      }
     }
     ObjectBigList<long[]> allAggIndexes = ListsUtils.powerSet(allIndexes.toArray(new Long[] {}));
-    if (log.isDebugEnabled()) {
-      Utils.logMemory();
-    }
 
     // int[] allAggVal = Arrays.stream(allAgg).mapToInt(array ->
     // Arrays.stream(array).sum()).toArray();
@@ -395,6 +398,9 @@ public class TxosLinker {
                     }
                   })
               .sum());
+    }
+    if (log.isDebugEnabled()) {
+      Utils.logMemory();
     }
     return new TxosAggregatesData(txos, allAggIndexes, ListsUtils.toPrimitiveArray(allAggVal));
   }
