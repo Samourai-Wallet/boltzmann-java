@@ -6,10 +6,15 @@ import com.samourai.boltzmann.utils.ListsUtils;
 import com.samourai.boltzmann.utils.Utils;
 import it.unimi.dsi.fastutil.ints.IntBigList;
 import it.unimi.dsi.fastutil.objects.ObjectBigList;
-import java.util.*;
+import java8.util.function.Consumer;
+import java8.util.function.IntConsumer;
+import java8.util.stream.IntStreams;
 import java8.util.stream.LongStreams;
+import java8.util.stream.StreamSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.*;
 
 public class TxosAggregator {
   private static final Logger log = LoggerFactory.getLogger(TxosAggregator.class);
@@ -112,33 +117,47 @@ public class TxosAggregator {
    */
   public Map<Long, List<int[]>> computeInAggCmbn(TxosAggregatesMatches aggMatches) {
     // aggs = allMatchInAgg[1:-1]
-    LinkedList<Integer> aggs = new LinkedList<Integer>(aggMatches.getAllMatchInAgg());
+    final LinkedList<Integer> aggs = new LinkedList<Integer>(aggMatches.getAllMatchInAgg());
     if (log.isDebugEnabled()) {
       Utils.logMemory("Computing combinations: " + aggs.size());
     }
 
     aggs.pollFirst(); // remove 0
 
-    Map<Long, List<int[]>> mat = new LinkedHashMap<Long, List<int[]>>();
+    final Map<Long, List<int[]>> mat = new LinkedHashMap<Long, List<int[]>>();
     if (!aggs.isEmpty()) {
       final int tgt = aggs.pollLast();
 
-      for (int i = 0; i < tgt + 1; i++) {
-        if (aggs.contains(i)) {
-          int jMax = Math.min(i, tgt - i + 1);
-          for (int j = 0; j < jMax; j++) {
-            if ((i & j) == 0 && aggs.contains(j)) {
-              List<int[]> aggChilds = createLine(mat, (long) i + j); // synchronized line creation
-              aggChilds.add(new int[] {i, j});
-            }
-          }
-        }
-        if (i % 400 == 0) {
-          if (log.isDebugEnabled()) {
-            Utils.logMemory(i + "/" + tgt + "... " + mat.size() + " matches found");
-          }
-        }
-      }
+      IntStreams.range(0, tgt + 1)
+          .parallel()
+          .forEachOrdered(
+              new IntConsumer() {
+                @Override
+                public void accept(final int i) {
+                  if (aggs.contains(i)) {
+                    int jMax = Math.min(i, tgt - i + 1);
+
+                    IntStreams.range(0, jMax)
+                        .parallel()
+                        .forEach(
+                            new IntConsumer() {
+                              @Override
+                              public void accept(final int j) {
+                                if ((i & j) == 0 && aggs.contains(j)) {
+                                  List<int[]> aggChilds =
+                                      createLine(mat, (long) i + j); // synchronized line creation
+                                  aggChilds.add(new int[] {i, j});
+                                }
+                              }
+                            });
+                  }
+                  if (i % 400 == 0) {
+                    if (log.isDebugEnabled()) {
+                      Utils.logMemory(i + "/" + tgt + "... " + mat.size() + " matches found");
+                    }
+                  }
+                }
+              });
     }
     if (log.isDebugEnabled()) {
       Utils.logMemory(mat.size() + " combinations");
@@ -255,7 +274,7 @@ public class TxosAggregator {
           "Computing link matrix: " + itGt + "x" + otGt + " (" + estIters + " iters est.)");
     }
 
-    Map<long[], Integer> dLinks = new LinkedHashMap<long[], Integer>();
+    final Map<long[], Integer> dLinks = new LinkedHashMap<long[], Integer>();
 
     // Initializes a stack of tasks & sets the initial task
     //  0: index used to resume the processing of the task (required for depth-first algorithm)
@@ -308,11 +327,20 @@ public class TxosAggregator {
           // Gets the right input sub-aggregate (row from ircs)
           int nIr = ircs.get(i)[0];
 
-          if (iteration % 400 == 0) {
+          if (iteration % 50 == 0) {
             if (log.isDebugEnabled()) {
-              Utils.logMemory("Computing link matrix... Task " + iteration + "/" + estIters + " est. ("+t.getdOut().size()+" cmbn)");
+              Utils.logMemory(
+                  "Computing link matrix... Task "
+                      + iteration
+                      + "/"
+                      + estIters
+                      + " est. ("
+                      + t.getdOut().size()
+                      + " cmbn)");
             }
           }
+
+          // Run task
           Map<Long, Map<Long, int[]>> ndOut = runTask(nIl, nIr, aggMatches, otGt, t.getdOut());
 
           // Updates idx_il for the current task
@@ -342,52 +370,55 @@ public class TxosAggregator {
           nbTxCmbn = t.getdOut().get(otGt).get(0L)[1];
         } else {
           // Gets parent task
-          ComputeLinkMatrixTask pt = stack.getLast();
+          final ComputeLinkMatrixTask pt = stack.getLast();
 
           // Iterates over all entries from d_out
-          int x=0;
-          for (Map.Entry<Long, Map<Long, int[]>> doutEntry : t.getdOut().entrySet()) {
-            long or = doutEntry.getKey();
-            Map<Long, int[]> lOl = doutEntry.getValue();
-            long[] rKey = new long[] {t.getIr(), or};
+          final long il = t.getIl();
+          final long ir = t.getIr();
+          StreamSupport.stream(t.getdOut().entrySet()).forEach(new Consumer<Map.Entry<Long, Map<Long, int[]>>>() {
+            @Override
+            public void accept(Map.Entry<Long, Map<Long, int[]>> doutEntry) {
+              final long or = doutEntry.getKey();
+              Map<Long, int[]> lOl = doutEntry.getValue();
+              final long[] rKey = new long[]{ir, or};
 
-            // Iterates over all left aggregates
-            for (Map.Entry<Long, int[]> olEntry : lOl.entrySet()) {
-              long ol = olEntry.getKey();
-              int nbPrnt = olEntry.getValue()[0];
-              int nbChld = olEntry.getValue()[1];
+              // Iterates over all left aggregates
+              StreamSupport.stream(lOl.entrySet()).parallel().forEachOrdered(new Consumer<Map.Entry<Long, int[]>>() {
+                @Override
+                public void accept(Map.Entry<Long, int[]> olEntry) {
+                  long ol = olEntry.getKey();
+                  int nbPrnt = olEntry.getValue()[0];
+                  int nbChld = olEntry.getValue()[1];
 
-              long[] lKey = new long[] {t.getIl(), ol};
+                  long[] lKey = new long[]{il, ol};
 
-              // Updates the dictionary of links for the pair of aggregates
-              int nbOccur = nbChld + 1;
-              dLinks.put(rKey, (dLinks.containsKey(rKey) ? dLinks.get(rKey) : 0) + nbPrnt);
-              dLinks.put(
-                  lKey, (dLinks.containsKey(lKey) ? dLinks.get(lKey) : 0) + nbPrnt * nbOccur);
+                  // Updates the dictionary of links for the pair of aggregates
+                  final int nbOccur = nbChld + 1;
+                  dLinks.put(rKey, (dLinks.containsKey(rKey) ? dLinks.get(rKey) : 0) + nbPrnt);
+                  dLinks.put(
+                          lKey, (dLinks.containsKey(lKey) ? dLinks.get(lKey) : 0) + nbPrnt * nbOccur);
 
-              // Updates parent d_out by back-propagating number of child combinations
-              long pOr = ol + or;
-              Map<Long, int[]> plOl = pt.getdOut().get(pOr);
-              for (Map.Entry<Long, int[]> plOlEntry : plOl.entrySet()) {
-                long pOl = plOlEntry.getKey();
-                int pNbPrt = plOlEntry.getValue()[0];
-                int pNbChld = plOlEntry.getValue()[1];
-                pt.getdOut().get(pOr).put(pOl, new int[] {pNbPrt, pNbChld + nbOccur});
-              }
+                  // Updates parent d_out by back-propagating number of child combinations
+                  final long pOr = ol + or;
+                  final Map<Long, int[]> plOl = pt.getdOut().get(pOr);
+                  StreamSupport.stream(plOl.entrySet()).parallel().forEach(
+                          new java8.util.function.Consumer<Map.Entry<Long, int[]>>() {
+                            @Override
+                            public void accept(Map.Entry<Long, int[]> plOlEntry) {
+                              plOlEntry.getValue()[1] += nbOccur;
+                            }
+                          }
+                  );
+                }
+              });
             }
-
-            if (x % 400 == 399) {
-              if (log.isDebugEnabled()) {
-                Utils.logMemory("Computing link matrix... updating " + x + "/" + t.getdOut().size());
-              }
-            }
-            x++;
-          }
+          });
         }
       }
     }
     if (log.isDebugEnabled()) {
-      Utils.logMemory("Computing link matrix DONE... (" + iteration + " iterations/"+ estIters + " est.)");
+      Utils.logMemory(
+          "Computing link matrix DONE... (" + iteration + " iterations/" + estIters + " est.)");
     }
 
     // Fills the matrix
@@ -412,50 +443,64 @@ public class TxosAggregator {
   private Map<Long, Map<Long, int[]>> runTask(
       final int nIl,
       final int nIr,
-      TxosAggregatesMatches aggMatches,
+      final TxosAggregatesMatches aggMatches,
       final long otGt,
       final Map<Long, Map<Long, int[]>> dOut) {
-    Map<Long, Map<Long, int[]>> ndOut = new LinkedHashMap<Long, Map<Long, int[]>>();
+    final Map<Long, Map<Long, int[]>> ndOut = new LinkedHashMap<Long, Map<Long, int[]>>();
 
     // Iterates over outputs combinations previously found
-    for (Map.Entry<Long, Map<Long, int[]>> oREntry : dOut.entrySet()) {
-      long oR = oREntry.getKey();
-      long sol = otGt - oR;
+    StreamSupport.stream(dOut.entrySet()).parallel().forEachOrdered(
+            new java8.util.function.Consumer<Map.Entry<Long, Map<Long, int[]>>>() {
+              @Override
+              public void accept(Map.Entry<Long, Map<Long, int[]>> oREntry) {
+                final long oR = oREntry.getKey();
+                final long sol = otGt - oR;
 
-      // Computes the number of parent combinations
-      int nbPrt = 0;
-      for (int[] s : oREntry.getValue().values()) {
-        nbPrt += s[0];
-      }
+                // Computes the number of parent combinations
+                int nbPrt = 0;
+                for (int[] s : oREntry.getValue().values()) {
+                  nbPrt += s[0];
+                }
+                final int myNbPrt = nbPrt;
 
-      // Iterates over output sub-aggregates matching with left input sub-aggregate
-      long valIl = aggMatches.getMatchInAggToVal().get(nIl);
-      for (long nOl : aggMatches.getValToMatchOutAgg().get(valIl)) {
-        // Checks compatibility of output sub-aggregate with left part of output combination
-        if ((sol & nOl) == 0) {
-          // Computes:
-          //   the sum corresponding to the left part of the output combination
-          //   the complementary right output sub-aggregate
-          long nSol = sol + nOl;
-          long nOr = otGt - nSol;
+                // Iterates over output sub-aggregates matching with left input sub-aggregate
+                long valIl = aggMatches.getMatchInAggToVal().get(nIl);
+                StreamSupport.stream(aggMatches.getValToMatchOutAgg().get(valIl)).parallel().forEach(new Consumer<Integer>() {
+                  @Override
+                  public void accept(Integer nOl) {
+                    // Checks compatibility of output sub-aggregate with left part of output combination
+                    if ((sol & nOl) == 0) {
+                      // Computes:
+                      //   the sum corresponding to the left part of the output combination
+                      //   the complementary right output sub-aggregate
+                      long nSol = sol + nOl;
+                      long nOr = otGt - nSol;
 
-          // Checks if the right output sub-aggregate is valid
-          long valIr = aggMatches.getMatchInAggToVal().get(nIr);
-          List<Integer> matchOutAgg = aggMatches.getValToMatchOutAgg().get(valIr);
+                      // Checks if the right output sub-aggregate is valid
+                      long valIr = aggMatches.getMatchInAggToVal().get(nIr);
+                      List<Integer> matchOutAgg = aggMatches.getValToMatchOutAgg().get(valIr);
 
-          // Adds this output combination into n_d_out if all conditions met
-          if ((nSol & nOr) == 0 && matchOutAgg.contains((int) nOr)) { // TODO !!! CAST
-            Map<Long, int[]> ndOutVal = ndOut.get(nOr);
-            if (ndOutVal == null) {
-              ndOutVal = new LinkedHashMap<Long, int[]>();
-              ndOut.put(nOr, ndOutVal);
+                      // Adds this output combination into n_d_out if all conditions met
+                      if ((nSol & nOr) == 0 && matchOutAgg.contains((int) nOr)) { // TODO !!! CAST
+                        Map<Long, int[]> ndOutVal = ndOutLine(ndOut, nOr); // synchronized
+                        ndOutVal.put((long)nOl, new int[] {myNbPrt, 0});
+                      }
+                    }
+                  }
+                });
+              }
             }
-            ndOutVal.put(nOl, new int[] {nbPrt, 0});
-          }
-        }
-      }
-    }
+    );
     return ndOut;
+  }
+
+  private synchronized Map<Long, int[]> ndOutLine(Map<Long, Map<Long, int[]>> ndOut, long idx) {
+    Map<Long, int[]> ndOutVal = ndOut.get(idx);
+    if (ndOutVal == null) {
+      ndOutVal = new LinkedHashMap<Long, int[]>();
+      ndOut.put(idx, ndOutVal);
+    }
+    return ndOutVal;
   }
 
   /**
