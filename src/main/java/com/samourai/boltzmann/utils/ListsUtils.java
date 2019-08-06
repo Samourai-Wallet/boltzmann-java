@@ -11,7 +11,6 @@ import java.util.*;
 import java.util.Map.Entry;
 
 public class ListsUtils {
-
   /**
    * Checks if sets from a list of sets share common elements and merge sets when common elements
    * are detected

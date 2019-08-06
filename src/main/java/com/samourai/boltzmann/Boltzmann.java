@@ -28,11 +28,9 @@ public class Boltzmann {
     return process(txos, settings.getMaxCjIntrafeesRatio(), settings.getOptions());
   }
 
-  public BoltzmannResult process(
-      String txid, float maxCjIntrafeesRatio, TxosLinkerOptionEnum... linkerOptions)
-      throws Exception {
+  public BoltzmannResult process(String txid) throws Exception {
     Txos txos = new ChainSoFetch().fetch(txid);
-    return process(txos, maxCjIntrafeesRatio, linkerOptions);
+    return process(txos, settings.getMaxCjIntrafeesRatio(), settings.getOptions());
   }
 
   public BoltzmannResult process(

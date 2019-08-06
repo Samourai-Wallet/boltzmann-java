@@ -2,11 +2,15 @@ package com.samourai.boltzmann;
 
 import com.samourai.boltzmann.beans.BoltzmannSettings;
 import com.samourai.boltzmann.beans.NoLimitSettings;
-import com.samourai.boltzmann.linker.TxosLinkerOptionEnum;
+import com.samourai.boltzmann.utils.LogbackUtils;
+import org.slf4j.event.Level;
 
 public class Application {
 
   public static void main(String[] args) throws Exception {
+    // TODO dynamic toggle for debug
+    LogbackUtils.setLogLevel("com.samourai.boltzmann", Level.DEBUG.toString());
+
     // parse args
     if (args.length < 1) {
       System.err.println("Usage: <txid> [maxCjIntrafeesRatio]");
@@ -22,11 +26,7 @@ public class Application {
 
     // run
     BoltzmannSettings settings = new NoLimitSettings();
-    new Boltzmann(settings)
-        .process(
-            txid,
-            maxCjIntrafeesRatio,
-            TxosLinkerOptionEnum.PRECHECK,
-            TxosLinkerOptionEnum.LINKABILITY);
+    settings.setMaxCjIntrafeesRatio(maxCjIntrafeesRatio);
+    new Boltzmann(settings).process(txid);
   }
 }

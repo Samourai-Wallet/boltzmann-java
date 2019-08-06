@@ -3,71 +3,18 @@ package com.samourai.boltzmann.aggregator;
 import com.samourai.boltzmann.beans.Txos;
 import com.samourai.boltzmann.linker.IntraFees;
 import com.samourai.boltzmann.utils.ListsUtils;
+import com.samourai.boltzmann.utils.Utils;
 import it.unimi.dsi.fastutil.ints.IntBigList;
 import it.unimi.dsi.fastutil.objects.ObjectBigList;
 import java.util.*;
-import java.util.Map.Entry;
-import java8.util.function.LongUnaryOperator;
 import java8.util.stream.LongStreams;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TxosAggregator {
+  private static final Logger log = LoggerFactory.getLogger(TxosAggregator.class);
 
   public TxosAggregator() {}
-
-  /** Computes several data structures which will be used later */
-  public TxosAggregates prepareData(Txos txos) {
-    TxosAggregatesData allInAgg = prepareTxos(txos.getInputs());
-    TxosAggregatesData allOutAgg = prepareTxos(txos.getOutputs());
-    return new TxosAggregates(allInAgg, allOutAgg);
-  }
-
-  /**
-   * Computes several data structures related to a list of txos
-   *
-   * @param initialTxos list of txos (list of tuples (id, value))
-   * @return list of txos sorted by decreasing values array of aggregates (combinations of txos) in
-   *     binary format array of values associated to the aggregates
-   */
-  public TxosAggregatesData prepareTxos(Map<String, Long> initialTxos) {
-    Map<String, Long> txos = new LinkedHashMap<String, Long>();
-
-    // Orders txos by decreasing value
-    Comparator<Entry<String, Long>> comparingByValueReverse =
-        Collections.reverseOrder(ListsUtils.<String, Long>comparingByValue());
-    for (Entry<String, Long> entry :
-        ListsUtils.sortMap(initialTxos, comparingByValueReverse).entrySet()) {
-      // Removes txos with null value
-      if (entry.getValue() > 0) {
-        txos.put(entry.getKey(), entry.getValue());
-      }
-    }
-
-    // Creates a 1D array of values
-    final Long[] allVal = txos.values().toArray(new Long[] {});
-    List<Long> allIndexes = new ArrayList<Long>();
-    for (long i = 0; i < txos.size(); i++) {
-      allIndexes.add(i);
-    }
-
-    //// int[][] allAgg = ListsUtils.powerSet(allVal);
-    ObjectBigList<long[]> allAggIndexes = ListsUtils.powerSet(allIndexes.toArray(new Long[] {}));
-    // int[] allAggVal = Arrays.stream(allAgg).mapToInt(array ->
-    // Arrays.stream(array).sum()).toArray();
-    List<Long> allAggVal = new LinkedList<Long>();
-    for (long[] array : allAggIndexes) {
-      allAggVal.add(
-          LongStreams.of(array)
-              .map(
-                  new LongUnaryOperator() {
-                    @Override
-                    public long applyAsLong(long indice) {
-                      return allVal[(int) indice]; // TODO !!! cast
-                    }
-                  })
-              .sum());
-    }
-    return new TxosAggregatesData(txos, allAggIndexes, ListsUtils.toPrimitiveArray(allAggVal));
-  }
 
   /**
    * Matches input/output aggregates by values and returns a bunch of data structs
@@ -265,6 +212,12 @@ public class TxosAggregator {
     int nbTxCmbn = 0;
     long itGt = (long) Math.pow(2, txos.getInputs().size()) - 1;
     long otGt = (long) Math.pow(2, txos.getOutputs().size()) - 1;
+
+    if (log.isDebugEnabled()) {
+      log.debug("Computing link matrix: " + itGt + "x" + otGt);
+      Utils.logMemory();
+    }
+
     Map<long[], Integer> dLinks = new LinkedHashMap<long[], Integer>();
 
     // Initializes a stack of tasks & sets the initial task
@@ -288,6 +241,7 @@ public class TxosAggregator {
     // Sets start date/hour
     long startTime = System.currentTimeMillis();
 
+    int iteration = 0;
     // Iterates over all valid inputs combinations (top->down)
     while (!stack.isEmpty()) {
       // Checks duration
@@ -416,9 +370,18 @@ public class TxosAggregator {
               }
             }
           }
+
+          if (iteration % 200 == 0) {
+            if (log.isDebugEnabled()) {
+              log.debug("Computing link matrix... (iteration #" + iteration + ")");
+              Utils.logMemory();
+            }
+          }
+          iteration++;
         }
       }
     }
+    log.debug("Computing link matrix DONE... (" + iteration + " iterations)");
 
     // Fills the matrix
     ObjectBigList<IntBigList> links = newLinkCmbn(allAgg);

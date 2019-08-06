@@ -1,31 +1,25 @@
 package com.samourai.boltzmann.linker;
 
-import com.samourai.boltzmann.aggregator.TxosAggregates;
-import com.samourai.boltzmann.aggregator.TxosAggregatesMatches;
-import com.samourai.boltzmann.aggregator.TxosAggregator;
-import com.samourai.boltzmann.aggregator.TxosAggregatorResult;
+import com.samourai.boltzmann.aggregator.*;
 import com.samourai.boltzmann.beans.Txos;
 import com.samourai.boltzmann.processor.TxProcessorConst;
 import com.samourai.boltzmann.utils.ListsUtils;
+import com.samourai.boltzmann.utils.Utils;
 import it.unimi.dsi.fastutil.ints.IntBigArrayBigList;
 import it.unimi.dsi.fastutil.ints.IntBigList;
 import it.unimi.dsi.fastutil.objects.ObjectBigArrayBigList;
 import it.unimi.dsi.fastutil.objects.ObjectBigList;
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
+import java8.util.function.LongUnaryOperator;
+import java8.util.stream.LongStreams;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Compute the entropy and the inputs/outputs linkability of a of Bitcoin transaction. */
 public class TxosLinker {
+  private static final Logger log = LoggerFactory.getLogger(TxosLinker.class);
+
   // Default maximum duration in seconds
   private static final int MAX_DURATION = 180;
 
@@ -111,7 +105,8 @@ public class TxosLinker {
         && !hasIntraFees) {
 
       // Prepares the data
-      TxosAggregates allAgg = aggregator.prepareData(txos);
+      TxosAggregates allAgg = prepareData(txos);
+
       txos = new Txos(allAgg.getInAgg().getTxos(), allAgg.getOutAgg().getTxos());
       TxosAggregatesMatches aggMatches = aggregator.matchAggByVal(allAgg, fees, intraFees);
 
@@ -150,7 +145,7 @@ public class TxosLinker {
       }
 
       // Prepares data
-      TxosAggregates allAgg = aggregator.prepareData(txos);
+      TxosAggregates allAgg = prepareData(txos);
       txos = new Txos(allAgg.getInAgg().getTxos(), allAgg.getOutAgg().getTxos());
       TxosAggregatesMatches aggMatches = aggregator.matchAggByVal(allAgg, fees, intraFees);
 
@@ -330,6 +325,78 @@ public class TxosLinker {
       unpackedTxos.put(entry.getKey(), entry.getValue());
     }
     return idx;
+  }
+
+  /** Computes several data structures which will be used later */
+  private TxosAggregates prepareData(Txos txos) {
+    TxosAggregatesData allInAgg = prepareTxos(txos.getInputs());
+    TxosAggregatesData allOutAgg = prepareTxos(txos.getOutputs());
+    return new TxosAggregates(allInAgg, allOutAgg);
+  }
+
+  /**
+   * Computes several data structures related to a list of txos
+   *
+   * @param initialTxos list of txos (list of tuples (id, value))
+   * @return list of txos sorted by decreasing values array of aggregates (combinations of txos) in
+   *     binary format array of values associated to the aggregates
+   */
+  private TxosAggregatesData prepareTxos(Map<String, Long> initialTxos) {
+    Map<String, Long> txos = new LinkedHashMap<String, Long>();
+
+    // Orders txos by decreasing value
+    Comparator<Entry<String, Long>> comparingByValueReverse =
+        Collections.reverseOrder(ListsUtils.<String, Long>comparingByValue());
+    for (Entry<String, Long> entry :
+        ListsUtils.sortMap(initialTxos, comparingByValueReverse).entrySet()) {
+      // Removes txos with null value
+      if (entry.getValue() > 0) {
+        txos.put(entry.getKey(), entry.getValue());
+      }
+    }
+
+    // Creates a 1D array of values
+    final Long[] allVal = txos.values().toArray(new Long[] {});
+    List<Long> allIndexes = new ArrayList<Long>();
+    for (long i = 0; i < txos.size(); i++) {
+      allIndexes.add(i);
+    }
+
+    //// int[][] allAgg = ListsUtils.powerSet(allVal);
+
+    if (log.isDebugEnabled()) {
+      double MB_PER_AGGREGATE = 0.0001;
+      long nbAggregates = (long) Math.pow(2, allIndexes.size());
+      long memoryRequired = (long) (nbAggregates * MB_PER_AGGREGATE);
+      log.debug(
+          "Initializing aggregates ("
+              + memoryRequired
+              + "MB required, "
+              + nbAggregates
+              + " aggregates)");
+      Utils.logMemory();
+    }
+    ObjectBigList<long[]> allAggIndexes = ListsUtils.powerSet(allIndexes.toArray(new Long[] {}));
+    if (log.isDebugEnabled()) {
+      Utils.logMemory();
+    }
+
+    // int[] allAggVal = Arrays.stream(allAgg).mapToInt(array ->
+    // Arrays.stream(array).sum()).toArray();
+    List<Long> allAggVal = new LinkedList<Long>();
+    for (long[] array : allAggIndexes) {
+      allAggVal.add(
+          LongStreams.of(array)
+              .map(
+                  new LongUnaryOperator() {
+                    @Override
+                    public long applyAsLong(long indice) {
+                      return allVal[(int) indice]; // TODO !!! cast
+                    }
+                  })
+              .sum());
+    }
+    return new TxosAggregatesData(txos, allAggIndexes, ListsUtils.toPrimitiveArray(allAggVal));
   }
 
   // LIMITS
