@@ -294,7 +294,7 @@ public class TxosAggregator {
           "Computing link matrix: " + itGt + "x" + otGt + " (" + estIters + " iters est.)");
     }
 
-    final Map<long[], Integer> dLinks = new LinkedHashMap<long[], Integer>();
+    final Map<Long, Map<Long, Integer>> dLinks = new LinkedHashMap<Long, Map<Long, Integer>>();
 
     // Initializes a stack of tasks & sets the initial task
     //  0: index used to resume the processing of the task (required for depth-first algorithm)
@@ -406,35 +406,51 @@ public class TxosAggregator {
     final ObjectBigList<IntBigList> links = newLinkCmbn(allAgg);
     updateLinkCmbn(links, itGt, otGt, allAgg);
     nbTxCmbn++;
+
+    // iterate dLinks key0
     StreamSupport.stream(dLinks.entrySet())
         .parallel()
         .forEachOrdered(
-            new Consumer<Map.Entry<long[], Integer>>() {
+            new Consumer<Map.Entry<Long, Map<Long, Integer>>>() {
               @Override
-              public void accept(Map.Entry<long[], Integer> linkEntry) {
-                long[] link = linkEntry.getKey();
-                final int mult = linkEntry.getValue();
-                final ObjectBigList<IntBigList> linkCmbn = newLinkCmbn(allAgg);
-                updateLinkCmbn(linkCmbn, link[0], link[1], allAgg);
+              public void accept(final Map.Entry<Long, Map<Long, Integer>> firstKeyEntry) {
+                final long key0 = firstKeyEntry.getKey();
 
-                LongStreams.range(0, links.size64())
+                // iterate dLinks key1
+                StreamSupport.stream(firstKeyEntry.getValue().entrySet())
                     .parallel()
-                    .forEach(
-                        new LongConsumer() {
+                    .forEachOrdered(
+                        new Consumer<Map.Entry<Long, Integer>>() {
                           @Override
-                          public void accept(final long i) {
+                          public void accept(Map.Entry<Long, Integer> secondKeyEntry) {
+                            long key1 = secondKeyEntry.getKey();
 
-                            LongStreams.range(0, links.get(i).size64())
+                            final int mult = secondKeyEntry.getValue();
+                            final ObjectBigList<IntBigList> linkCmbn = newLinkCmbn(allAgg);
+                            updateLinkCmbn(linkCmbn, key0, key1, allAgg);
+
+                            LongStreams.range(0, links.size64())
                                 .parallel()
                                 .forEach(
                                     new LongConsumer() {
                                       @Override
-                                      public void accept(final long j) {
-                                        int currentValue = links.get(i).getInt(j);
-                                        links
-                                            .get(i)
-                                            .set(
-                                                j, currentValue + linkCmbn.get(i).getInt(j) * mult);
+                                      public void accept(final long i) {
+
+                                        LongStreams.range(0, links.get(i).size64())
+                                            .parallel()
+                                            .forEach(
+                                                new LongConsumer() {
+                                                  @Override
+                                                  public void accept(final long j) {
+                                                    int currentValue = links.get(i).getInt(j);
+                                                    links
+                                                        .get(i)
+                                                        .set(
+                                                            j,
+                                                            currentValue
+                                                                + linkCmbn.get(i).getInt(j) * mult);
+                                                  }
+                                                });
                                       }
                                     });
                           }
@@ -448,7 +464,7 @@ public class TxosAggregator {
   private void onTaskCompleted(
       final ComputeLinkMatrixTask t,
       final ComputeLinkMatrixTask pt,
-      final Map<long[], Integer> dLinks) {
+      final Map<Long, Map<Long, Integer>> dLinks) {
 
     // Iterates over all entries from d_out
     final long il = t.getIl();
@@ -479,12 +495,8 @@ public class TxosAggregator {
                             // Updates the dictionary of links for the pair of aggregates
                             final int nbOccur = nbChld + 1;
                             synchronized (this) {
-                              dLinks.put(
-                                  rKey, (dLinks.containsKey(rKey) ? dLinks.get(rKey) : 0) + nbPrnt);
-                              dLinks.put(
-                                  lKey,
-                                  (dLinks.containsKey(lKey) ? dLinks.get(lKey) : 0)
-                                      + nbPrnt * nbOccur);
+                              addDLinkLine(rKey, nbPrnt, dLinks);
+                              addDLinkLine(lKey, nbPrnt * nbOccur, dLinks);
                             }
 
                             // Updates parent d_out by back-propagating number of child
@@ -504,6 +516,21 @@ public class TxosAggregator {
                         });
               }
             });
+  }
+
+  private synchronized void addDLinkLine(
+      long[] key, int addValue, Map<Long, Map<Long, Integer>> dLinks) {
+    Map<Long, Integer> subMap = dLinks.get(key[0]);
+    if (subMap == null) {
+      subMap = new LinkedHashMap<Long, Integer>();
+      dLinks.put(key[0], subMap);
+    }
+
+    Integer currentValue = subMap.get(key[1]);
+    if (currentValue == null) {
+      currentValue = 0;
+    }
+    subMap.put(key[1], currentValue + addValue);
   }
 
   private Map<Long, Map<Long, int[]>> runTask(
