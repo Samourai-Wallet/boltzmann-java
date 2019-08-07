@@ -7,7 +7,6 @@ import com.samourai.boltzmann.utils.Utils;
 import it.unimi.dsi.fastutil.ints.IntBigList;
 import it.unimi.dsi.fastutil.objects.ObjectBigList;
 import java.util.*;
-
 import java8.util.function.*;
 import java8.util.stream.IntStreams;
 import java8.util.stream.LongStreams;
@@ -179,7 +178,7 @@ public class TxosAggregator {
    * @return list of deterministic links as tuples (idx_output, idx_input)
    */
   public Set<long[]> checkDtrmLinks(
-      Txos txos, TxosAggregates allAgg, TxosAggregatesMatches aggMatches) {
+      Txos txos, final TxosAggregates allAgg, final TxosAggregatesMatches aggMatches) {
     int nbIns = txos.getInputs().size();
     int nbOuts = txos.getOutputs().size();
 
@@ -187,24 +186,46 @@ public class TxosAggregator {
       Utils.logMemory("Checking deterministic links: " + nbOuts + "x" + nbIns);
     }
 
-    ObjectBigList<IntBigList> matCmbn = ListsUtils.newIntMatrix(nbOuts, nbIns, 0);
+    final ObjectBigList<IntBigList> matCmbn = ListsUtils.newIntMatrix(nbOuts, nbIns, 0);
 
-    IntBigList inCmbn = ListsUtils.newIntBigList(nbIns, 0);
-    for (Map.Entry<Integer, Long> inEntry : aggMatches.getMatchInAggToVal().entrySet()) {
-      int inIdx = inEntry.getKey();
-      long val = inEntry.getValue();
-      for (int outIdx : aggMatches.getValToMatchOutAgg().get(val)) {
-        // Computes a matrix storing numbers of raw combinations matching input/output pairs
-        updateLinkCmbn(matCmbn, inIdx, outIdx, allAgg);
+    final IntBigList inCmbn = ListsUtils.newIntBigList(nbIns, 0);
 
-        // Computes sum of combinations along inputs axis to get the number of combinations
-        long[] inIndexes = allAgg.getInAgg().getAllAggIndexes().get(inIdx);
-        for (long inIndex : inIndexes) {
-          int currentValue = inCmbn.getInt(inIndex);
-          inCmbn.set(inIndex, currentValue + 1);
-        }
-      }
-    }
+    StreamSupport.stream(aggMatches.getMatchInAggToVal().entrySet())
+        .parallel()
+        .forEach(
+            new Consumer<Map.Entry<Integer, Long>>() {
+              @Override
+              public void accept(Map.Entry<Integer, Long> inEntry) {
+                final int inIdx = inEntry.getKey();
+                long val = inEntry.getValue();
+
+                StreamSupport.stream(aggMatches.getValToMatchOutAgg().get(val))
+                    .parallel()
+                    .forEach(
+                        new Consumer<Integer>() {
+                          @Override
+                          public void accept(Integer outIdx) {
+                            // Computes a matrix storing numbers of raw combinations matching
+                            // input/output pairs
+                            updateLinkCmbn(matCmbn, inIdx, outIdx, allAgg);
+
+                            // Computes sum of combinations along inputs axis to get the number of
+                            // combinations
+                            long[] inIndexes = allAgg.getInAgg().getAllAggIndexes().get(inIdx);
+                            LongStreams.of(inIndexes)
+                                .parallel()
+                                .forEach(
+                                    new LongConsumer() {
+                                      @Override
+                                      public void accept(long inIndex) {
+                                        int currentValue = inCmbn.getInt(inIndex);
+                                        inCmbn.set(inIndex, currentValue + 1);
+                                      }
+                                    });
+                          }
+                        });
+              }
+            });
 
     // Builds a list of sets storing inputs having a deterministic link with an output
     int nbCmbn = inCmbn.getInt(0);
@@ -381,94 +402,109 @@ public class TxosAggregator {
     }
 
     // Fills the matrix
+    Utils.logMemory("Filling matrix...");
     final ObjectBigList<IntBigList> links = newLinkCmbn(allAgg);
     updateLinkCmbn(links, itGt, otGt, allAgg);
     nbTxCmbn++;
-    StreamSupport.stream(dLinks.entrySet()).forEach(new Consumer<Map.Entry<long[], Integer>>() {
-      @Override
-      public void accept(Map.Entry<long[], Integer> linkEntry) {
-        long[] link = linkEntry.getKey();
-        final int mult = linkEntry.getValue();
-        final ObjectBigList<IntBigList> linkCmbn = newLinkCmbn(allAgg);
-        updateLinkCmbn(linkCmbn, link[0], link[1], allAgg);
-
-        LongStreams.range(0, links.size64()).parallel().forEach(new LongConsumer() {
-          @Override
-          public void accept(final long i) {
-
-            LongStreams.range(0, links.get(i).size64()).parallel().forEach(new LongConsumer() {
+    StreamSupport.stream(dLinks.entrySet())
+        .parallel()
+        .forEachOrdered(
+            new Consumer<Map.Entry<long[], Integer>>() {
               @Override
-              public void accept(final long j) {
-                synchronized (this) {
-                  int currentValue = links.get(i).getInt(j);
-                  links.get(i).set(j, currentValue + linkCmbn.get(i).getInt(j) * mult);
-                }
+              public void accept(Map.Entry<long[], Integer> linkEntry) {
+                long[] link = linkEntry.getKey();
+                final int mult = linkEntry.getValue();
+                final ObjectBigList<IntBigList> linkCmbn = newLinkCmbn(allAgg);
+                updateLinkCmbn(linkCmbn, link[0], link[1], allAgg);
+
+                LongStreams.range(0, links.size64())
+                    .parallel()
+                    .forEach(
+                        new LongConsumer() {
+                          @Override
+                          public void accept(final long i) {
+
+                            LongStreams.range(0, links.get(i).size64())
+                                .parallel()
+                                .forEach(
+                                    new LongConsumer() {
+                                      @Override
+                                      public void accept(final long j) {
+                                        int currentValue = links.get(i).getInt(j);
+                                        links
+                                            .get(i)
+                                            .set(
+                                                j, currentValue + linkCmbn.get(i).getInt(j) * mult);
+                                      }
+                                    });
+                          }
+                        });
               }
             });
-          }
-        });
-      }
-    });
+    Utils.logMemory("Filling matrix DONE");
     return new TxosAggregatorResult(nbTxCmbn, links);
   }
 
-  private void onTaskCompleted(final ComputeLinkMatrixTask t, final ComputeLinkMatrixTask pt, final Map<long[], Integer> dLinks) {
+  private void onTaskCompleted(
+      final ComputeLinkMatrixTask t,
+      final ComputeLinkMatrixTask pt,
+      final Map<long[], Integer> dLinks) {
 
-      // Iterates over all entries from d_out
-      final long il = t.getIl();
-      final long ir = t.getIr();
-      StreamSupport.stream(t.getdOut().entrySet())
-          .forEach(
-              new Consumer<Map.Entry<Long, Map<Long, int[]>>>() {
-                @Override
-                public void accept(Map.Entry<Long, Map<Long, int[]>> doutEntry) {
-                  final long or = doutEntry.getKey();
-                  Map<Long, int[]> lOl = doutEntry.getValue();
-                  final long[] rKey = new long[] {ir, or};
+    // Iterates over all entries from d_out
+    final long il = t.getIl();
+    final long ir = t.getIr();
+    StreamSupport.stream(t.getdOut().entrySet())
+        .parallel()
+        .forEachOrdered(
+            new Consumer<Map.Entry<Long, Map<Long, int[]>>>() {
+              @Override
+              public void accept(Map.Entry<Long, Map<Long, int[]>> doutEntry) {
+                final long or = doutEntry.getKey();
+                Map<Long, int[]> lOl = doutEntry.getValue();
+                final long[] rKey = new long[] {ir, or};
 
-                  // Iterates over all left aggregates
-                  StreamSupport.stream(lOl.entrySet())
-                      .parallel()
-                      .forEach(
-                          new Consumer<Map.Entry<Long, int[]>>() {
-                            @Override
-                            public void accept(Map.Entry<Long, int[]> olEntry) {
-                          long ol = olEntry.getKey();
-                          int nbPrnt = olEntry.getValue()[0];
-                          int nbChld = olEntry.getValue()[1];
+                // Iterates over all left aggregates
+                StreamSupport.stream(lOl.entrySet())
+                    .parallel()
+                    .forEach(
+                        new Consumer<Map.Entry<Long, int[]>>() {
+                          @Override
+                          public void accept(Map.Entry<Long, int[]> olEntry) {
+                            long ol = olEntry.getKey();
+                            int nbPrnt = olEntry.getValue()[0];
+                            int nbChld = olEntry.getValue()[1];
 
-                          long[] lKey = new long[] {il, ol};
+                            long[] lKey = new long[] {il, ol};
 
-                          // Updates the dictionary of links for the pair of aggregates
-                          final int nbOccur = nbChld + 1;
-                          synchronized (this) {
-                            dLinks.put(
-                                    rKey,
-                                    (dLinks.containsKey(rKey) ? dLinks.get(rKey) : 0) + nbPrnt);
-                            dLinks.put(
-                                    lKey,
-                                    (dLinks.containsKey(lKey) ? dLinks.get(lKey) : 0)
-                                            + nbPrnt * nbOccur);
+                            // Updates the dictionary of links for the pair of aggregates
+                            final int nbOccur = nbChld + 1;
+                            synchronized (this) {
+                              dLinks.put(
+                                  rKey, (dLinks.containsKey(rKey) ? dLinks.get(rKey) : 0) + nbPrnt);
+                              dLinks.put(
+                                  lKey,
+                                  (dLinks.containsKey(lKey) ? dLinks.get(lKey) : 0)
+                                      + nbPrnt * nbOccur);
+                            }
+
+                            // Updates parent d_out by back-propagating number of child
+                            // combinations
+                            final long pOr = ol + or;
+                            final Map<Long, int[]> plOl = pt.getdOut().get(pOr);
+                            StreamSupport.stream(plOl.entrySet())
+                                .parallel()
+                                .forEach(
+                                    new java8.util.function.Consumer<Map.Entry<Long, int[]>>() {
+                                      @Override
+                                      public void accept(Map.Entry<Long, int[]> plOlEntry) {
+                                        plOlEntry.getValue()[1] += nbOccur;
+                                      }
+                                    });
                           }
-
-                          // Updates parent d_out by back-propagating number of child
-                          // combinations
-                          final long pOr = ol + or;
-                          final Map<Long, int[]> plOl = pt.getdOut().get(pOr);
-                          StreamSupport.stream(plOl.entrySet())
-                                  .parallel()
-                                  .forEach(
-                                          new java8.util.function.Consumer<Map.Entry<Long, int[]>>() {
-                                            @Override
-                                            public void accept(Map.Entry<Long, int[]> plOlEntry) {
-                                              plOlEntry.getValue()[1] += nbOccur;
-                                            }
-                                          });
-                        }
-                      });
-                }
-              });
-    }
+                        });
+              }
+            });
+  }
 
   private Map<Long, Map<Long, int[]>> runTask(
       final int nIl,
@@ -489,12 +525,17 @@ public class TxosAggregator {
                 final long sol = otGt - oR;
 
                 // Computes the number of parent combinations
-                final int nbPrt = StreamSupport.stream(oREntry.getValue().values()).mapToInt(new ToIntFunction<int[]>() {
-                  @Override
-                  public int applyAsInt(int[] s) {
-                    return s[0];
-                  }
-                }).sum();
+                final int nbPrt =
+                    StreamSupport.stream(oREntry.getValue().values())
+                        .parallel()
+                        .mapToInt(
+                            new ToIntFunction<int[]>() {
+                              @Override
+                              public int applyAsInt(int[] s) {
+                                return s[0];
+                              }
+                            })
+                        .sum();
 
                 // Iterates over output sub-aggregates matching with left input sub-aggregate
                 long valIl = aggMatches.getMatchInAggToVal().get(nIl);
