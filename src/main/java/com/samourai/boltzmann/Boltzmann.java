@@ -4,7 +4,7 @@ import com.google.common.math.DoubleMath;
 import com.samourai.boltzmann.beans.BoltzmannResult;
 import com.samourai.boltzmann.beans.BoltzmannSettings;
 import com.samourai.boltzmann.beans.Txos;
-import com.samourai.boltzmann.fetch.ChainSoFetch;
+import com.samourai.boltzmann.fetch.OxtFetch;
 import com.samourai.boltzmann.linker.TxosLinkerOptionEnum;
 import com.samourai.boltzmann.processor.TxProcessor;
 import com.samourai.boltzmann.processor.TxProcessorResult;
@@ -29,7 +29,7 @@ public class Boltzmann {
   }
 
   public BoltzmannResult process(String txid) throws Exception {
-    Txos txos = new ChainSoFetch().fetch(txid);
+    Txos txos = new OxtFetch().fetch(txid);
     return process(txos, settings.getMaxCjIntrafeesRatio(), settings.getOptions());
   }
 

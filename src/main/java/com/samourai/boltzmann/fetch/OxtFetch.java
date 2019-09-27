@@ -8,11 +8,14 @@ import java.io.FileNotFoundException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class ChainSoFetch {
+public class OxtFetch {
+  private static final Logger log = LoggerFactory.getLogger(OxtFetch.class);
   private static final ObjectMapper objectMapper = new ObjectMapper();
 
-  public ChainSoFetch() {}
+  public OxtFetch() {}
 
   public Txos fetch(String txid) throws Exception {
     Map<String, Long> ins0 = new HashMap<String, Long>();
@@ -22,37 +25,42 @@ public class ChainSoFetch {
 
     JsonNode obj;
 
-    URL localResource = ChainSoFetch.class.getResource("/chainSoFetch/" + txid + ".json");
+    URL localResource = OxtFetch.class.getResource("/chainSoFetch/" + txid + ".json");
     if (localResource != null) {
       // read from local file
       File localJson = new File(localResource.getFile());
       obj = objectMapper.readTree(localJson);
     } else {
       // read fetch
-      String url = "https://chain.so/api/v2/get_tx/BTC/" + txid;
+      String url = "https://api.oxt.me/txs/" + txid + "?boltzmann-java";
       try {
         obj = objectMapper.readTree(new URL(url));
       } catch (FileNotFoundException e) {
         throw new RuntimeException("Transaction not found: " + txid);
       }
     }
-    JsonNode dataObj = obj.get("data");
+    JsonNode dataObj = obj.withArray("data").get(0);
 
-    JsonNode inputs = dataObj.withArray("inputs");
+    JsonNode inputs = dataObj.withArray("ins");
     for (JsonNode input : inputs) {
-      String amount = input.get("value").asText();
+      String amount = input.get("amount").asText();
       long value = (long) (Double.valueOf(amount) * 1e8);
-      ins0.put(input.get("address").asText(), value);
+      ins0.put(input.withArray("addresses").get(0).get("value").asText(), value);
     }
 
-    JsonNode outputs = dataObj.withArray("outputs");
+    JsonNode outputs = dataObj.withArray("outs");
     for (JsonNode output : outputs) {
-      String amount = output.get("value").asText();
+      String amount = output.get("amount").asText();
       long value = (long) (Double.valueOf(amount) * 1e8);
-      outs0.put(output.get("address").asText(), value);
+      outs0.put(output.withArray("addresses").get(0).get("value").asText(), value);
     }
 
     Txos txos = new Txos(ins0, outs0);
+    if (log.isDebugEnabled()) {
+      log.debug("# Fetched " + txid + ":");
+      log.debug(txos.getInputs().size() + " inputs: " + txos.getInputs());
+      log.debug(txos.getOutputs().size() + " outputs: " + txos.getOutputs());
+    }
     return txos;
   }
 }

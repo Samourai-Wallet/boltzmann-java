@@ -48,66 +48,74 @@ public class TxosAggregator {
     // Computes total fees paid/receiver by taker/maker
     final boolean hasIntraFees = intraFees != null && intraFees.hasFees();
     final long feesTaker = hasIntraFees ? fees + intraFees.getFeesTaker() : 0;
-    final long feesMaker = hasIntraFees ? -intraFees.getFeesMaker() : 0; // doesn 't take into account tx fees paid by makers
+    final long feesMaker =
+        hasIntraFees
+            ? -intraFees.getFeesMaker()
+            : 0; // doesn 't take into account tx fees paid by makers
 
     // Finds input and output aggregates with matching values
     IntStreams.range(0, allUniqueInAggVal.length)
-      .parallel().forEachOrdered(new IntConsumer() {
-        @Override
-        public void accept(int i) {
-          long inAggVal = allUniqueInAggVal[i];
+        .parallel()
+        .forEachOrdered(
+            new IntConsumer() {
+              @Override
+              public void accept(int i) {
+                long inAggVal = allUniqueInAggVal[i];
 
-          if (i % 400 == 0) {
-            if (log.isDebugEnabled()) {
-              Utils.logMemory(i + "/" + allUniqueInAggVal.length);
-            }
-          }
-
-          for (int j = 0; j < allUniqueOutAggVal.length; j++) {
-            final long outAggVal = allUniqueOutAggVal[j];
-
-            long diff = inAggVal - outAggVal;
-
-            if (!hasIntraFees && diff < 0) {
-              break;
-            } else {
-              // Computes conditions required for a matching
-              boolean condNoIntrafees = (!hasIntraFees && diff <= fees);
-              boolean condIntraFees =
-                      (hasIntraFees
-                              && ((diff <= 0 && diff >= feesMaker) || (diff >= 0 && diff <= feesTaker)));
-
-              if (condNoIntrafees || condIntraFees) {
-                // Registers the matching input aggregate
-                for (int inIdx = 0; inIdx < allInAggVal.length; inIdx++) {
-                  if (allInAggVal[inIdx] == inAggVal) {
-                    if (!allMatchInAgg.contains(inIdx)) {
-                      allMatchInAgg.add(inIdx);
-                      matchInAggToVal.put(inIdx, inAggVal);
-                    }
+                if (i % 400 == 0) {
+                  if (log.isDebugEnabled()) {
+                    Utils.logMemory(i + "/" + allUniqueInAggVal.length);
                   }
                 }
 
-                // Registers the matching output aggregate
-                if (!valToMatchOutAgg.containsKey(inAggVal)) {
-                    valToMatchOutAgg.put(inAggVal, new ArrayList<Integer>());
-                }
-                final List<Integer> keysMatchOutAgg = valToMatchOutAgg.get(inAggVal);
+                for (int j = 0; j < allUniqueOutAggVal.length; j++) {
+                  final long outAggVal = allUniqueOutAggVal[j];
 
-                IntStreams.range(0, allOutAggVal.length).parallel().forEachOrdered(new IntConsumer() {
-                    @Override
-                    public void accept(int indice) {
-                        if (allOutAggVal[indice] == outAggVal) {
-                            keysMatchOutAgg.add(indice);
+                  long diff = inAggVal - outAggVal;
+
+                  if (!hasIntraFees && diff < 0) {
+                    break;
+                  } else {
+                    // Computes conditions required for a matching
+                    boolean condNoIntrafees = (!hasIntraFees && diff <= fees);
+                    boolean condIntraFees =
+                        (hasIntraFees
+                            && ((diff <= 0 && diff >= feesMaker)
+                                || (diff >= 0 && diff <= feesTaker)));
+
+                    if (condNoIntrafees || condIntraFees) {
+                      // Registers the matching input aggregate
+                      for (int inIdx = 0; inIdx < allInAggVal.length; inIdx++) {
+                        if (allInAggVal[inIdx] == inAggVal) {
+                          if (!allMatchInAgg.contains(inIdx)) {
+                            allMatchInAgg.add(inIdx);
+                            matchInAggToVal.put(inIdx, inAggVal);
+                          }
                         }
+                      }
+
+                      // Registers the matching output aggregate
+                      if (!valToMatchOutAgg.containsKey(inAggVal)) {
+                        valToMatchOutAgg.put(inAggVal, new ArrayList<Integer>());
+                      }
+                      final List<Integer> keysMatchOutAgg = valToMatchOutAgg.get(inAggVal);
+
+                      IntStreams.range(0, allOutAggVal.length)
+                          .parallel()
+                          .forEachOrdered(
+                              new IntConsumer() {
+                                @Override
+                                public void accept(int indice) {
+                                  if (allOutAggVal[indice] == outAggVal) {
+                                    keysMatchOutAgg.add(indice);
+                                  }
+                                }
+                              });
                     }
-                });
+                  }
+                }
               }
-            }
-          }
-        }
-      }
-    );
+            });
     if (log.isDebugEnabled()) {
       Utils.logMemory();
     }
@@ -295,7 +303,7 @@ public class TxosAggregator {
     long itGt = (long) Math.pow(2, txos.getInputs().size()) - 1;
     long otGt = (long) Math.pow(2, txos.getOutputs().size()) - 1;
 
-    long estIters = (long) 1.5 * itGt * itGt / 32;
+    long estIters = (long) 1.5 * itGt * otGt / 32;
     if (log.isDebugEnabled()) {
       Utils.logMemory(
           "Computing link matrix: " + itGt + "x" + otGt + " (" + estIters + " iters est.)");
