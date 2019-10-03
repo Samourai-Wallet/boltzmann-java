@@ -300,8 +300,8 @@ public class TxosAggregator {
       Map<Long, List<int[]>> matInAggCmbn,
       Integer maxDuration) {
     int nbTxCmbn = 0;
-    long itGt = (long) Math.pow(2, txos.getInputs().size()) - 1;
-    long otGt = (long) Math.pow(2, txos.getOutputs().size()) - 1;
+    final long itGt = (long) Math.pow(2, txos.getInputs().size()) - 1;
+    final long otGt = (long) Math.pow(2, txos.getOutputs().size()) - 1;
 
     long estIters = (long) 1.5 * itGt * otGt / 32;
     if (log.isDebugEnabled()) {
@@ -415,11 +415,28 @@ public class TxosAggregator {
           "Computing link matrix DONE... (" + iteration + " iterations/" + estIters + " est.)");
     }
 
+    TxosAggregatorResult result = finalizeLinkMatrix(allAgg, itGt, otGt, dLinks, nbTxCmbn);
+    return result;
+  }
+
+  private TxosAggregatorResult finalizeLinkMatrix(
+      final TxosAggregates allAgg,
+      long itGt,
+      long otGt,
+      final Map<Long, Map<Long, Integer>> dLinks,
+      int nbTxCmbn) {
+
+    // clone from this map for better performances
+    final ObjectBigList<IntBigList> linksClear = newLinkCmbn(allAgg);
+
     // Fills the matrix
-    Utils.logMemory("Filling matrix...");
-    final ObjectBigList<IntBigList> links = newLinkCmbn(allAgg);
+    Utils.logMemory("Filling matrix for allAgg... " + itGt + "x" + otGt);
+    final ObjectBigList<IntBigList> links = ListsUtils.clone(linksClear);
     updateLinkCmbn(links, itGt, otGt, allAgg);
     nbTxCmbn++;
+
+    final long linksX = links.size64();
+    final long linksY = links.get(0).size64();
 
     // iterate dLinks key0
     StreamSupport.stream(dLinks.entrySet())
@@ -429,6 +446,21 @@ public class TxosAggregator {
               @Override
               public void accept(final Map.Entry<Long, Map<Long, Integer>> firstKeyEntry) {
                 final long key0 = firstKeyEntry.getKey();
+
+                if (key0 % 100 == 0) {
+                  log.info(
+                      "Processing dLink "
+                          + key0
+                          + "/"
+                          + dLinks.size()
+                          + ": "
+                          + firstKeyEntry.getValue().size()
+                          + " x ("
+                          + linksX
+                          + "x"
+                          + linksY
+                          + ")");
+                }
 
                 // iterate dLinks key1
                 StreamSupport.stream(firstKeyEntry.getValue().entrySet())
@@ -440,17 +472,17 @@ public class TxosAggregator {
                             long key1 = secondKeyEntry.getKey();
 
                             final int mult = secondKeyEntry.getValue();
-                            final ObjectBigList<IntBigList> linkCmbn = newLinkCmbn(allAgg);
+                            final ObjectBigList<IntBigList> linkCmbn = ListsUtils.clone(linksClear);
                             updateLinkCmbn(linkCmbn, key0, key1, allAgg);
 
-                            LongStreams.range(0, links.size64())
+                            LongStreams.range(0, linksX)
                                 .parallel()
                                 .forEach(
                                     new LongConsumer() {
                                       @Override
                                       public void accept(final long i) {
 
-                                        LongStreams.range(0, links.get(i).size64())
+                                        LongStreams.range(0, linksY)
                                             .parallel()
                                             .forEach(
                                                 new LongConsumer() {

@@ -385,10 +385,8 @@ public class TxosLinker {
     if (log.isDebugEnabled()) {
       double MB_PER_AGGREGATE = 0.0001;
       long nbAggregates = (long) Math.pow(2, allIndexes.size());
-      long memoryRequired = (long) (nbAggregates * MB_PER_AGGREGATE);
       if (log.isDebugEnabled()) {
-        Utils.logMemory(
-            "Computing aggregates: " + nbAggregates + " (" + memoryRequired + "MB est.)");
+        Utils.logMemory("Computing aggregates: " + nbAggregates);
       }
     }
     ObjectBigList<long[]> allAggIndexes = ListsUtils.powerSet(allIndexes.toArray(new Long[] {}));
