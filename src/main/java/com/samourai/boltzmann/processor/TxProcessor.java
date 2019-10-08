@@ -134,10 +134,15 @@ public class TxProcessor {
       result = linker.process(filteredTxos, linkedTxos, options, intraFees);
     }
 
+    // compute nb_cmbn_perfect_cj
+    NbTxos nbTxosPrfctCj = getClosestPerfectCoinjoin(filteredIns.getTxos().size(), filteredOuts.getTxos().size());
+    Double nbCmbnPrfctCj = computeCmbnsPerfectCj(nbTxosPrfctCj.getNbIns(), nbTxosPrfctCj.getNbOuts());
+
     // Computes tx efficiency (expressed as the ratio: nb_cmbn/nb_cmbn_perfect_cj)
-    Double efficiency =
-        computeWalletEfficiency(
-            filteredIns.getTxos().size(), filteredOuts.getTxos().size(), result.getNbCmbn());
+    Double efficiency = null;
+    if (nbCmbnPrfctCj != null) {
+      efficiency = computeWalletEfficiency(result.getNbCmbn(), nbCmbnPrfctCj);
+    }
 
     // Post processes results (replaces txo ids by bitcoin addresses)
 
@@ -154,7 +159,9 @@ public class TxProcessor {
         new Txos(txoIns, txoOuts),
         fees,
         intraFees,
-        efficiency);
+        efficiency,
+        nbCmbnPrfctCj,
+        nbTxosPrfctCj);
   }
 
   /**
@@ -314,20 +321,13 @@ public class TxProcessor {
    * Computes the efficiency of a transaction defined by: - its number of inputs - its number of
    * outputs - its entropy (expressed as number of combinations)
    *
-   * @param nbIns number of inputs
-   * @param nbOuts number of outputs
    * @param nbCmbn number of combinations found for the transaction
+   * @param nbCmbnPrfctCj number of combinations for perfect CJ
    * @return an efficiency score computed as the ratio: nb_cmbn / nb_cmbn_closest_perfect_coinjoin
    */
-  private Double computeWalletEfficiency(int nbIns, int nbOuts, int nbCmbn) {
+  private Double computeWalletEfficiency(int nbCmbn, double nbCmbnPrfctCj) {
     if (nbCmbn == 1) {
       return 0.0;
-    }
-
-    NbTxos tgtNbTxos = getClosestPerfectCoinjoin(nbIns, nbOuts);
-    Double nbCmbnPrfctCj = computeCmbnsPerfectCj(tgtNbTxos.getNbIns(), tgtNbTxos.getNbOuts());
-    if (nbCmbnPrfctCj == null) {
-      return null;
     }
     return nbCmbn / nbCmbnPrfctCj;
   }

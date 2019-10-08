@@ -15,6 +15,8 @@ public class TxProcessorResult extends TxosLinkerResult {
   private long fees;
   private IntraFees intraFees;
   private Double efficiency;
+  private Double nbCmbnPrfctCj;
+  private NbTxos nbTxosPrfctCj;
 
   public TxProcessorResult(
       int nbCmbn,
@@ -25,13 +27,17 @@ public class TxProcessorResult extends TxosLinkerResult {
       Txos txos,
       long fees,
       IntraFees intraFees,
-      Double efficiency) {
+      Double efficiency,
+      Double nbCmbnPrfctCj,
+      NbTxos nbTxosPrfctCj) {
     super(nbCmbn, matLnkCombinations, dtrmLnksById, txos);
     this.matLnkProbabilities = matLnkProbabilities;
     this.entropy = entropy;
     this.fees = fees;
     this.intraFees = intraFees;
     this.efficiency = efficiency;
+    this.nbCmbnPrfctCj = nbCmbnPrfctCj;
+    this.nbTxosPrfctCj = nbTxosPrfctCj;
   }
 
   public ObjectBigList<DoubleBigList> getMatLnkProbabilities() {
@@ -52,6 +58,14 @@ public class TxProcessorResult extends TxosLinkerResult {
 
   public Double getEfficiency() {
     return efficiency;
+  }
+
+  public Double getNbCmbnPrfctCj() {
+    return nbCmbnPrfctCj;
+  }
+
+  public NbTxos getNbTxosPrfctCj() {
+    return nbTxosPrfctCj;
   }
 
   public int getNbLinks() {

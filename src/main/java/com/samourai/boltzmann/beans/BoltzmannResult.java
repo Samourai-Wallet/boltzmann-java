@@ -16,7 +16,9 @@ public class BoltzmannResult extends TxProcessorResult {
         r.getTxos(),
         r.getFees(),
         r.getIntraFees(),
-        r.getEfficiency());
+        r.getEfficiency(),
+            r.getNbCmbnPrfctCj(),
+            r.getNbTxosPrfctCj());
     this.dtrmLnks =
         r.getDtrmLnksById() != null
             ? replaceDtrmLinks(r.getDtrmLnksById(), r.getTxos())

@@ -74,6 +74,9 @@ public class Boltzmann {
               + " satoshis");
     }
 
+    if (result.getNbCmbnPrfctCj() != null) {
+      System.out.println("Perfect coinjoin = "+result.getNbCmbnPrfctCj()+" combinations (for "+result.getNbTxosPrfctCj().getNbIns()+"x"+result.getNbTxosPrfctCj().getNbOuts()+")");
+    }
     System.out.println("Nb combinations = " + result.getNbCmbn());
     if (result.getEntropy() != null) {
       System.out.println("Tx entropy = " + result.getEntropy() + " bits");
