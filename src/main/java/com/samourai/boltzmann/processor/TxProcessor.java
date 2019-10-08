@@ -135,8 +135,10 @@ public class TxProcessor {
     }
 
     // compute nb_cmbn_perfect_cj
-    NbTxos nbTxosPrfctCj = getClosestPerfectCoinjoin(filteredIns.getTxos().size(), filteredOuts.getTxos().size());
-    Double nbCmbnPrfctCj = computeCmbnsPerfectCj(nbTxosPrfctCj.getNbIns(), nbTxosPrfctCj.getNbOuts());
+    NbTxos nbTxosPrfctCj =
+        getClosestPerfectCoinjoin(filteredIns.getTxos().size(), filteredOuts.getTxos().size());
+    Double nbCmbnPrfctCj =
+        computeCmbnsPerfectCj(nbTxosPrfctCj.getNbIns(), nbTxosPrfctCj.getNbOuts());
 
     // Computes tx efficiency (expressed as the ratio: nb_cmbn/nb_cmbn_perfect_cj)
     Double efficiency = null;

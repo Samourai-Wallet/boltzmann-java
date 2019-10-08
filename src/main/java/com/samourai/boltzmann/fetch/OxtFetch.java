@@ -6,7 +6,7 @@ import com.samourai.boltzmann.beans.Txos;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.net.URL;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,8 +18,8 @@ public class OxtFetch {
   public OxtFetch() {}
 
   public Txos fetch(String txid) throws Exception {
-    Map<String, Long> ins0 = new HashMap<String, Long>();
-    Map<String, Long> outs0 = new HashMap<String, Long>();
+    Map<String, Long> ins0 = new LinkedHashMap<String, Long>();
+    Map<String, Long> outs0 = new LinkedHashMap<String, Long>();
 
     System.setProperty("http.agent", "curl/7.51.0");
 
