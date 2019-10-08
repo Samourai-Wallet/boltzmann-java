@@ -4,11 +4,11 @@ import com.google.common.math.DoubleMath;
 import com.samourai.boltzmann.beans.BoltzmannResult;
 import com.samourai.boltzmann.beans.BoltzmannSettings;
 import com.samourai.boltzmann.beans.Txos;
+import com.samourai.boltzmann.fetch.OxtFetch;
 import com.samourai.boltzmann.linker.TxosLinkerOptionEnum;
 import com.samourai.boltzmann.processor.TxProcessor;
 import com.samourai.boltzmann.processor.TxProcessorResult;
 import com.samourai.boltzmann.utils.ListsUtils;
-import java.util.Arrays;
 import java8.util.stream.LongStreams;
 
 public class Boltzmann {
@@ -25,6 +25,11 @@ public class Boltzmann {
   }
 
   public BoltzmannResult process(Txos txos) {
+    return process(txos, settings.getMaxCjIntrafeesRatio(), settings.getOptions());
+  }
+
+  public BoltzmannResult process(String txid) throws Exception {
+    Txos txos = new OxtFetch().fetch(txid);
     return process(txos, settings.getMaxCjIntrafeesRatio(), settings.getOptions());
   }
 
@@ -69,6 +74,9 @@ public class Boltzmann {
               + " satoshis");
     }
 
+    if (result.getNbCmbnPrfctCj() != null) {
+      System.out.println("Perfect coinjoin = "+result.getNbCmbnPrfctCj()+" combinations (for "+result.getNbTxosPrfctCj().getNbIns()+"x"+result.getNbTxosPrfctCj().getNbOuts()+")");
+    }
     System.out.println("Nb combinations = " + result.getNbCmbn());
     if (result.getEntropy() != null) {
       System.out.println("Tx entropy = " + result.getEntropy() + " bits");
@@ -91,11 +99,11 @@ public class Boltzmann {
     } else {
       if (result.getMatLnkProbabilities() != null) {
         System.out.println("Linkability Matrix (probabilities) :");
-        System.out.println(Arrays.deepToString(result.getMatLnkProbabilities()));
+        System.out.println(result.getMatLnkProbabilities());
       }
       if (result.getMatLnkCombinations() != null) {
         System.out.println("Linkability Matrix (#combinations with link) :");
-        System.out.println(Arrays.deepToString(result.getMatLnkCombinations()));
+        System.out.println(result.getMatLnkCombinations());
       }
     }
 

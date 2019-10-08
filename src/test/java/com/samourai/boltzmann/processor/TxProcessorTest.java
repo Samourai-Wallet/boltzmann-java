@@ -11,7 +11,7 @@ import org.junit.Test;
 
 public class TxProcessorTest {
   private TxProcessor txProcessor =
-          new TxProcessor(BoltzmannSettings.MAX_DURATION_DEFAULT, BoltzmannSettings.MAX_TXOS_DEFAULT);
+      new TxProcessor(BoltzmannSettings.MAX_DURATION_DEFAULT, BoltzmannSettings.MAX_TXOS_DEFAULT);
 
   @Test
   public void testCheckCoinjoinPattern() {
@@ -25,7 +25,7 @@ public class TxProcessorTest {
   }
 
   private void processCheckCoinjoinPattern(
-          Map<String, Long> outs, int maxNbEntities, CoinjoinPattern expected) {
+      Map<String, Long> outs, int maxNbEntities, CoinjoinPattern expected) {
     CoinjoinPattern result = txProcessor.checkCoinjoinPattern(outs, maxNbEntities);
 
     Assert.assertEquals(expected.getNbPtcpts(), result.getNbPtcpts());
@@ -39,7 +39,7 @@ public class TxProcessorTest {
   }
 
   private void processComputeCoinjoinIntrafees(
-          int nbPtcpts, int cjAmount, float prctMax, IntraFees expected) {
+      int nbPtcpts, int cjAmount, float prctMax, IntraFees expected) {
     IntraFees result = txProcessor.computeCoinjoinIntrafees(nbPtcpts, cjAmount, prctMax);
 
     Assert.assertEquals(expected.getFeesMaker(), result.getFeesMaker());
@@ -62,8 +62,8 @@ public class TxProcessorTest {
     Txos txos0 = new Txos(ins0, outs0);
 
     TxProcessorResult result0 =
-            txProcessor.processTx(
-                    txos0, 0.005f, TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY);
+        txProcessor.processTx(
+            txos0, 0.005f, TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY);
 
     Assert.assertEquals(1.5849625007211563f, result0.getEntropy(), 0.01f);
 
@@ -80,8 +80,8 @@ public class TxProcessorTest {
 
     Txos txos1 = new Txos(ins1, outs1);
     TxProcessorResult result1 =
-            txProcessor.processTx(
-                    txos1, 0.005f, TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY);
+        txProcessor.processTx(
+            txos1, 0.005f, TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY);
 
     Assert.assertEquals(2.321928094887362f, result1.getEntropy(), 0.01f);
   }
@@ -101,8 +101,8 @@ public class TxProcessorTest {
 
     Txos txos0 = new Txos(ins0, outs0);
     TxProcessorResult result0 =
-            txProcessor.processTx(
-                    txos0, 0.005f, TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY);
+        txProcessor.processTx(
+            txos0, 0.005f, TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY);
 
     Assert.assertEquals(0.42857142857142855f, result0.getEfficiency(), 0.01f);
 
@@ -119,8 +119,8 @@ public class TxProcessorTest {
 
     Txos txos1 = new Txos(ins1, outs1);
     TxProcessorResult result1 =
-            txProcessor.processTx(
-                    txos1, 0.005f, TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY);
+        txProcessor.processTx(
+            txos1, 0.005f, TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY);
 
     Assert.assertEquals(0.7142857142857143f, result1.getEfficiency(), 0.01f);
   }
@@ -141,8 +141,8 @@ public class TxProcessorTest {
     Txos txos0 = new Txos(ins0, outs0);
 
     TxProcessorResult result0 =
-            txProcessor.processTx(
-                    txos0, 0.005f, TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY);
+        txProcessor.processTx(
+            txos0, 0.005f, TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY);
 
     Assert.assertEquals(0.75, result0.getNRatioDL(), 0.0001f);
 
@@ -159,11 +159,9 @@ public class TxProcessorTest {
 
     Txos txos1 = new Txos(ins1, outs1);
     TxProcessorResult result1 =
-            txProcessor.processTx(
-                    txos1, 0.005f, TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY);
+        txProcessor.processTx(
+            txos1, 0.005f, TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY);
 
     Assert.assertEquals(1.0, result1.getNRatioDL(), 0.0001f);
-
   }
-
 }

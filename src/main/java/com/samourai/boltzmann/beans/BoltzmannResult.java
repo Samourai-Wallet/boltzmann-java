@@ -16,23 +16,25 @@ public class BoltzmannResult extends TxProcessorResult {
         r.getTxos(),
         r.getFees(),
         r.getIntraFees(),
-        r.getEfficiency());
+        r.getEfficiency(),
+            r.getNbCmbnPrfctCj(),
+            r.getNbTxosPrfctCj());
     this.dtrmLnks =
         r.getDtrmLnksById() != null
             ? replaceDtrmLinks(r.getDtrmLnksById(), r.getTxos())
             : new String[][] {};
   }
 
-  private String[][] replaceDtrmLinks(Set<int[]> dtrmLinks, Txos txos) {
+  private String[][] replaceDtrmLinks(Set<long[]> dtrmLinks, Txos txos) {
     String[][] result = new String[dtrmLinks.size()][2];
 
     String[] outs = txos.getOutputs().keySet().toArray(new String[] {});
     String[] ins = txos.getInputs().keySet().toArray(new String[] {});
 
     int i = 0;
-    for (int[] dtrmLink : dtrmLinks) {
-      String out = outs[dtrmLink[0]];
-      String in = ins[dtrmLink[1]];
+    for (long[] dtrmLink : dtrmLinks) {
+      String out = outs[(int) dtrmLink[0]]; // TODO !!! cast
+      String in = ins[(int) dtrmLink[1]]; // TODO !!! cast
       result[i] = new String[] {out, in};
       i++;
     }

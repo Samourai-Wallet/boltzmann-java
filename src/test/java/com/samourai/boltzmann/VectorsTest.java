@@ -5,7 +5,9 @@ import com.samourai.boltzmann.beans.BoltzmannResult;
 import com.samourai.boltzmann.beans.Txos;
 import com.samourai.boltzmann.linker.IntraFees;
 import com.samourai.boltzmann.linker.TxosLinkerOptionEnum;
+import com.samourai.boltzmann.processor.NbTxos;
 import com.samourai.boltzmann.processor.TxProcessorResult;
+import com.samourai.boltzmann.utils.ListsUtils;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -57,28 +59,28 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
             fees,
             intraFees,
-            efficiency);
+            efficiency, 0d, new NbTxos(0,0));
     processTest(inputs, outputs, 0, expected, expectedReadableDtrmLnks);
 
     intraFees = new IntraFees(0, 0);
     expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
             fees,
             intraFees,
-            efficiency);
+            efficiency, 0d, new NbTxos(0,0));
     processTest(inputs, outputs, 0.005f, expected, expectedReadableDtrmLnks);
   }
 
@@ -108,28 +110,28 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
             fees,
             intraFees,
-            efficiency);
+            efficiency, 3d, new NbTxos(2,2));
     processTest(inputs, outputs, 0, expected, expectedReadableDtrmLnks);
 
     intraFees = new IntraFees(0, 0);
     expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
             fees,
             intraFees,
-            efficiency);
+            efficiency, 3d, new NbTxos(2,2));
     processTest(inputs, outputs, 0.005f, expected, expectedReadableDtrmLnks);
   }
 
@@ -168,28 +170,28 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
             fees,
             intraFees,
-            efficiency);
+            efficiency, 7d, new NbTxos(2,4));
     processTest(inputs, outputs, 0, expected, expectedReadableDtrmLnks);
 
     intraFees = new IntraFees(500, 500);
     expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
             fees,
             intraFees,
-            efficiency);
+            efficiency, 7d, new NbTxos(2,4));
     processTest(inputs, outputs, 0.005f, expected, expectedReadableDtrmLnks);
   }
 
@@ -280,14 +282,14 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
             fees,
             intraFees,
-            efficiency);
+            efficiency, 1496d, new NbTxos(5,5));
     processTest(inputs, outputs, 0.005f, expected, expectedReadableDtrmLnks);
 
     efficiency = 0.00026057666988501715;
@@ -333,14 +335,14 @@ public class VectorsTest {
     expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
             fees,
             intraFees,
-            efficiency);
+            efficiency, 0d, new NbTxos(0,0));
     processTest(inputs, outputs, 0.005f, expected, expectedReadableDtrmLnks);
   }
 
@@ -374,28 +376,28 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
             fees,
             intraFees,
-            efficiency);
+            efficiency, 7d, new NbTxos(2,4));
     processTest(inputs, outputs, 0, expected, expectedReadableDtrmLnks);
 
     intraFees = new IntraFees(0, 0);
     expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
             fees,
             intraFees,
-            efficiency);
+            efficiency, 7d, new NbTxos(2,4));
     processTest(inputs, outputs, 0.005f, expected, expectedReadableDtrmLnks);
   }
 
@@ -424,14 +426,14 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
             fees,
             intraFees,
-            efficiency);
+            efficiency, 7d, new NbTxos(2,4));
     processTest(inputs, outputs, 0, expected, expectedReadableDtrmLnks);
   }
 
@@ -463,14 +465,14 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
             fees,
             intraFees,
-            efficiency);
+            efficiency, 7d, new NbTxos(2,4));
     processTest(inputs, outputs, 0, expected, expectedReadableDtrmLnks);
   }
 
@@ -504,14 +506,14 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
             fees,
             intraFees,
-            efficiency);
+            efficiency, 7d, new NbTxos(2,4));
     processTest(inputs, outputs, 0, expected, expectedReadableDtrmLnks);
   }
 
@@ -543,14 +545,14 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
             fees,
             intraFees,
-            efficiency);
+            efficiency, 7d, new NbTxos(2,4));
     processTest(inputs, outputs, 0, expected, expectedReadableDtrmLnks);
   }
 
@@ -588,14 +590,14 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
             fees,
             intraFees,
-            efficiency);
+            efficiency, 136d, new NbTxos(3,6));
     processTest(inputs, outputs, 0, expected, expectedReadableDtrmLnks);
   }
 
@@ -624,14 +626,14 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
             fees,
             intraFees,
-            efficiency);
+            efficiency, 3d, new NbTxos(2,2));
     processTest(inputs, outputs, 0, expected, expectedReadableDtrmLnks);
   }
 
@@ -660,14 +662,14 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
             fees,
             intraFees,
-            efficiency);
+            efficiency, 16d, new NbTxos(3,3));
     processTest(inputs, outputs, 0, expected, expectedReadableDtrmLnks);
   }
 
@@ -700,14 +702,14 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
             fees,
             intraFees,
-            efficiency);
+            efficiency, 16d, new NbTxos(3,3));
     processTest(inputs, outputs, 0, expected, expectedReadableDtrmLnks);
   }
 
@@ -740,14 +742,14 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
             fees,
             intraFees,
-            efficiency);
+            efficiency, 16d, new NbTxos(3,3));
     processTest(inputs, outputs, 0, expected, expectedReadableDtrmLnks);
   }
 
@@ -784,14 +786,14 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
             fees,
             intraFees,
-            efficiency);
+            efficiency, 131d, new NbTxos(4,4));
     processTest(inputs, outputs, 0, expected, expectedReadableDtrmLnks);
   }
 
@@ -867,14 +869,14 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
             fees,
             intraFees,
-            efficiency);
+            efficiency, 1496d, new NbTxos(5,5));
     processTest(inputs, outputs, 0, expected, expectedReadableDtrmLnks);
   }
 
@@ -966,14 +968,14 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
             fees,
             intraFees,
-            efficiency);
+            efficiency, 22482d, new NbTxos(6,6));
     processTest(inputs, outputs, 0, expected, expectedReadableDtrmLnks);
   }
 
@@ -1083,14 +1085,14 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
             fees,
             intraFees,
-            efficiency);
+            efficiency, 426833d, new NbTxos(7,7));
     processTest(inputs, outputs, 0, expected, expectedReadableDtrmLnks);
   }
 
@@ -1221,14 +1223,14 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
             fees,
             intraFees,
-            efficiency);
+            efficiency, 0d, new NbTxos(0,0));
     processTest(inputs, outputs, 0, expected, expectedReadableDtrmLnks);
   }
 
@@ -1269,14 +1271,14 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
             fees,
             intraFees,
-            efficiency);
+            efficiency, 0d, new NbTxos(0,0));
     processTest(inputs, outputs, 0, expected, expectedReadableDtrmLnks);
   }
 
@@ -1319,14 +1321,14 @@ public class VectorsTest {
     TxProcessorResult expected =
         new TxProcessorResult(
             nbCmbn,
-            matLnkCombinations,
-            matLnkProbabilities,
+            ListsUtils.toBigList(matLnkCombinations),
+            ListsUtils.toBigList(matLnkProbabilities),
             entropy,
             null,
             new Txos(inputs, outputs),
             fees,
             intraFees,
-            efficiency);
+            efficiency, 0d, new NbTxos(0,0));
     processTest(inputs, outputs, 0, expected, expectedReadableDtrmLnks);
   }
 
@@ -1346,10 +1348,8 @@ public class VectorsTest {
             TxosLinkerOptionEnum.LINKABILITY);
 
     Assert.assertEquals(expected.getNbCmbn(), result.getNbCmbn());
-    Assert.assertTrue(
-        Arrays.deepEquals(expected.getMatLnkCombinations(), result.getMatLnkCombinations()));
-    Assert.assertTrue(
-        Arrays.deepEquals(expected.getMatLnkProbabilities(), result.getMatLnkProbabilities()));
+    Assert.assertTrue(expected.getMatLnkCombinations().equals(result.getMatLnkCombinations()));
+    Assert.assertTrue(expected.getMatLnkProbabilities().equals(result.getMatLnkProbabilities()));
     // System.err.println(Arrays.deepToString(expectedReadableDtrmLnks));
     // System.err.println(Arrays.deepToString(result.getDtrmLnks(), result.getTxos())));
     Assert.assertTrue(Arrays.deepEquals(expectedReadableDtrmLnks, result.getDtrmLnks()));
@@ -1364,6 +1364,9 @@ public class VectorsTest {
     Assert.assertEquals(
         expected.getIntraFees().getFeesTaker(), result.getIntraFees().getFeesTaker());
     Assert.assertEquals(expected.getEfficiency(), result.getEfficiency());
+    Assert.assertEquals(expected.getNbCmbnPrfctCj(), result.getNbCmbnPrfctCj());
+    Assert.assertEquals(expected.getNbTxosPrfctCj().getNbIns(), result.getNbTxosPrfctCj().getNbIns());
+    Assert.assertEquals(expected.getNbTxosPrfctCj().getNbOuts(), result.getNbTxosPrfctCj().getNbOuts());
     Assert.assertEquals(expected.getEntropy(), result.getEntropy());
   }
 }

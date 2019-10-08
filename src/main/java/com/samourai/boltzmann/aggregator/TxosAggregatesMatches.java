@@ -2,7 +2,6 @@ package com.samourai.boltzmann.aggregator;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class TxosAggregatesMatches {
 

@@ -7,7 +7,8 @@ A Java library computing the entropy of Bitcoin transactions and the linkability
 
 For a description of the metrics :
 
-- Bitcoin Transactions & Privacy (part 1) : https://gist.github.com/LaurentMT/e758767ca4038ac40aaf
+- Bitcoin Transactions & Priva
+cy (part 1) : https://gist.github.com/LaurentMT/e758767ca4038ac40aaf
 
 - Bitcoin Transactions & Privacy (part 2) : https://gist.github.com/LaurentMT/d361bca6dc52868573a2
 
@@ -15,6 +16,17 @@ For a description of the metrics :
 
 
 ## Usage
+### Run from command-line
+```
+java -jar target/boltzmann-java-develop-SNAPSHOT-run.jar <txid> [maxCjIntrafeesRatio]
+```
+
+Large txs:
+```
+java -Xmx20G -Xms20G -jar target/boltzmann-java-develop-SNAPSHOT-run.jar <txid> [maxCjIntrafeesRatio]
+```
+
+### Developers
 See [src/test/java/com/samourai/boltzmann/Example.java](src/test/java/com/samourai/boltzmann/Example.java)
 
 
@@ -29,6 +41,8 @@ Build with maven:
 cd boltzmann-java
 mvn clean install -Dmaven.test.skip=true
 ```
+
+Or retrieve from [JitPack](https://jitpack.io/#Samourai-Wallet/boltzmann-java) repository
 
 
 ## Resources

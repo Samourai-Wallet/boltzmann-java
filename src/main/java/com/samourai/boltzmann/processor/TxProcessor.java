@@ -19,12 +19,16 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java8.util.stream.LongStreams;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TxProcessor {
-  private int maxDuration;
-  private int maxTxos;
+  private static final Logger log = LoggerFactory.getLogger(TxProcessor.class);
 
-  public TxProcessor(int maxDuration, int maxTxos) {
+  private Integer maxDuration;
+  private Integer maxTxos;
+
+  public TxProcessor(Integer maxDuration, Integer maxTxos) {
     this.maxDuration = maxDuration;
     this.maxTxos = maxTxos;
   }
@@ -42,6 +46,15 @@ public class TxProcessor {
       Txos txos, float maxCjIntrafeesRatio, TxosLinkerOptionEnum... linkerOptions) {
     Set<TxosLinkerOptionEnum> options =
         new HashSet<TxosLinkerOptionEnum>(Arrays.asList(linkerOptions));
+
+    if (log.isDebugEnabled()) {
+      log.debug(
+          "Processing tx: "
+              + txos.getInputs().size()
+              + " inputs, "
+              + txos.getOutputs().size()
+              + " outputs");
+    }
 
     // Builds lists of filtered input/output txos (with generated ids)
     FilteredTxos filteredIns = filterTxos(txos.getInputs(), TxProcessorConst.MARKER_INPUT);
@@ -121,10 +134,15 @@ public class TxProcessor {
       result = linker.process(filteredTxos, linkedTxos, options, intraFees);
     }
 
+    // compute nb_cmbn_perfect_cj
+    NbTxos nbTxosPrfctCj = getClosestPerfectCoinjoin(filteredIns.getTxos().size(), filteredOuts.getTxos().size());
+    Double nbCmbnPrfctCj = computeCmbnsPerfectCj(nbTxosPrfctCj.getNbIns(), nbTxosPrfctCj.getNbOuts());
+
     // Computes tx efficiency (expressed as the ratio: nb_cmbn/nb_cmbn_perfect_cj)
-    Double efficiency =
-        computeWalletEfficiency(
-            filteredIns.getTxos().size(), filteredOuts.getTxos().size(), result.getNbCmbn());
+    Double efficiency = null;
+    if (nbCmbnPrfctCj != null) {
+      efficiency = computeWalletEfficiency(result.getNbCmbn(), nbCmbnPrfctCj);
+    }
 
     // Post processes results (replaces txo ids by bitcoin addresses)
 
@@ -141,7 +159,9 @@ public class TxProcessor {
         new Txos(txoIns, txoOuts),
         fees,
         intraFees,
-        efficiency);
+        efficiency,
+        nbCmbnPrfctCj,
+        nbTxosPrfctCj);
   }
 
   /**
@@ -301,20 +321,13 @@ public class TxProcessor {
    * Computes the efficiency of a transaction defined by: - its number of inputs - its number of
    * outputs - its entropy (expressed as number of combinations)
    *
-   * @param nbIns number of inputs
-   * @param nbOuts number of outputs
    * @param nbCmbn number of combinations found for the transaction
+   * @param nbCmbnPrfctCj number of combinations for perfect CJ
    * @return an efficiency score computed as the ratio: nb_cmbn / nb_cmbn_closest_perfect_coinjoin
    */
-  private Double computeWalletEfficiency(int nbIns, int nbOuts, int nbCmbn) {
+  private Double computeWalletEfficiency(int nbCmbn, double nbCmbnPrfctCj) {
     if (nbCmbn == 1) {
       return 0.0;
-    }
-
-    NbTxos tgtNbTxos = getClosestPerfectCoinjoin(nbIns, nbOuts);
-    Double nbCmbnPrfctCj = computeCmbnsPerfectCj(tgtNbTxos.getNbIns(), tgtNbTxos.getNbOuts());
-    if (nbCmbnPrfctCj == null) {
-      return null;
     }
     return nbCmbn / nbCmbnPrfctCj;
   }
@@ -377,7 +390,8 @@ public class TxProcessor {
       return null;
     }
 
-    // Checks if we can use precomputed values
+    // Checks if we can use
+    // precomputed values
     if (nbIns <= 1 || nbOuts <= 1) {
       return 1.0;
     } else if (nbIns <= 20 && nbOuts <= 60) {
