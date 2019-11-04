@@ -81,6 +81,7 @@ public class BoltzmannResult extends TxProcessorResult {
     System.out.println("Nb combinations = " + getNbCmbn());
     if (getEntropy() != null) {
       System.out.println("Tx entropy = " + getEntropy() + " bits");
+      System.out.println("Entropy denstity = " + getDensity());
     }
 
     if (getEfficiency() != null) {

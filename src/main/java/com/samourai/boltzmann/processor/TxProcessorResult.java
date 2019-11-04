@@ -72,6 +72,10 @@ public class TxProcessorResult extends TxosLinkerResult {
     return getTxos().getInputs().size() * getTxos().getOutputs().size();
   }
 
+  public Double getDensity() {
+    return getEntropy() / (getTxos().getInputs().size() + getTxos().getOutputs().size());
+  }
+
   public int getNbDL() {
     return getDtrmLnksById().size();
   }

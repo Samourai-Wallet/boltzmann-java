@@ -66,6 +66,7 @@ public class TxProcessorTest {
             txos0, 0.005f, TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY);
 
     Assert.assertEquals(1.5849625007211563f, result0.getEntropy(), 0.01f);
+    Assert.assertEquals(0.2641604167f, result0.getDensity(), 0.01f);
 
     // 742d8e113839946dad9e81c4b5211e959710a55aa499486bf13a3f435b45456c
     Map<String, Long> ins1 = new HashMap<String, Long>();
@@ -84,6 +85,7 @@ public class TxProcessorTest {
             txos1, 0.005f, TxosLinkerOptionEnum.PRECHECK, TxosLinkerOptionEnum.LINKABILITY);
 
     Assert.assertEquals(2.321928094887362f, result1.getEntropy(), 0.01f);
+    Assert.assertEquals(0.386988008158f, result1.getDensity(), 0.01f);
   }
 
   @Test
