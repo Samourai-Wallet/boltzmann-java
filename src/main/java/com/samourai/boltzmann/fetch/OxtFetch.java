@@ -25,7 +25,7 @@ public class OxtFetch {
 
     JsonNode obj;
 
-    URL localResource = OxtFetch.class.getResource("/chainSoFetch/" + txid + ".json");
+    URL localResource = OxtFetch.class.getResource("/fetchTx/" + txid + ".json");
     if (localResource != null) {
       // read from local file
       File localJson = new File(localResource.getFile());
