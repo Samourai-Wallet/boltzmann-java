@@ -77,7 +77,7 @@ public class ListsUtils {
       result.add(line);
       if (i % 10000000 == 0) {
         if (log.isDebugEnabled()) {
-          Utils.logMemory("Computing powerset... " + i + "/" + max);
+          Utils.logMemory("Computing powerset: " + i + "/" + max);
         }
       }
     }
