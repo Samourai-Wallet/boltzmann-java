@@ -11,8 +11,12 @@ import java.util.*;
 import java.util.Map.Entry;
 import java8.util.function.LongConsumer;
 import java8.util.stream.LongStreams;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ListsUtils {
+  private static final Logger log = LoggerFactory.getLogger(ListsUtils.class);
+
   /**
    * Checks if sets from a list of sets share common elements and merge sets when common elements
    * are detected
@@ -71,6 +75,11 @@ public class ListsUtils {
         if ((b & 1) != 0) line[k++] = a[j];
       }
       result.add(line);
+      if (i % 10000000 == 0) {
+        if (log.isDebugEnabled()) {
+          Utils.logMemory("Computing powerset... " + i + "/" + max);
+        }
+      }
     }
 
     // consistency check
