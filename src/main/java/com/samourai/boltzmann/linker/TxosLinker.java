@@ -383,10 +383,14 @@ public class TxosLinker {
     //// int[][] allAgg = ListsUtils.powerSet(allVal);
 
     if (log.isDebugEnabled()) {
-      double MB_PER_AGGREGATE = 0.0001;
       long nbAggregates = (long) Math.pow(2, allIndexes.size());
       if (log.isDebugEnabled()) {
-        Utils.logMemory("Computing aggregates: " + nbAggregates);
+        Utils.logMemory(
+            "Computing aggregates for "
+                + initialTxos.size()
+                + " utxos: "
+                + nbAggregates
+                + " aggregates...");
       }
     }
     ObjectBigList<long[]> allAggIndexes = ListsUtils.powerSet(allIndexes.toArray(new Long[] {}));
@@ -406,9 +410,7 @@ public class TxosLinker {
                   })
               .sum());
     }
-    if (log.isDebugEnabled()) {
-      Utils.logMemory();
-    }
+
     return new TxosAggregatesData(txos, allAggIndexes, ListsUtils.toPrimitiveArray(allAggVal));
   }
 

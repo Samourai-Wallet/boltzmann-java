@@ -116,9 +116,6 @@ public class TxosAggregator {
                 }
               }
             });
-    if (log.isDebugEnabled()) {
-      Utils.logMemory();
-    }
     return new TxosAggregatesMatches(allMatchInAgg, matchInAggToVal, valToMatchOutAgg);
   }
 
@@ -131,11 +128,11 @@ public class TxosAggregator {
   public Map<Long, List<int[]>> computeInAggCmbn(TxosAggregatesMatches aggMatches) {
     // aggs = allMatchInAgg[1:-1]
     final LinkedList<Integer> aggs = new LinkedList<Integer>(aggMatches.getAllMatchInAgg());
-    if (log.isDebugEnabled()) {
-      Utils.logMemory("Computing combinations: " + aggs.size());
-    }
-
     aggs.pollFirst(); // remove 0
+
+    if (log.isDebugEnabled()) {
+      Utils.logMemory("Computing combinations for " + aggs.size() + " aggregates...");
+    }
 
     final Map<Long, List<int[]>> mat = new LinkedHashMap<Long, List<int[]>>();
     if (!aggs.isEmpty()) {
@@ -166,14 +163,21 @@ public class TxosAggregator {
                   }
                   if (i % 400 == 0) {
                     if (log.isDebugEnabled()) {
-                      Utils.logMemory(i + "/" + tgt + "... " + mat.size() + " matches");
+                      Utils.logMemory(
+                          "Computing combinations: "
+                              + i
+                              + "/"
+                              + tgt
+                              + "... ("
+                              + mat.size()
+                              + " matches)");
                     }
                   }
                 }
               });
     }
     if (log.isDebugEnabled()) {
-      Utils.logMemory(mat.size() + " combinations");
+      Utils.logMemory("Computing combinations DONE: " + mat.size() + " matches");
     }
     return mat;
   }
@@ -303,10 +307,8 @@ public class TxosAggregator {
     final long itGt = (long) Math.pow(2, txos.getInputs().size()) - 1;
     final long otGt = (long) Math.pow(2, txos.getOutputs().size()) - 1;
 
-    long estIters = (long) 1.5 * itGt * otGt / 32;
     if (log.isDebugEnabled()) {
-      Utils.logMemory(
-          "Computing link matrix: " + itGt + "x" + otGt + " (" + estIters + " iters est.)");
+      Utils.logMemory("Computing links for " + itGt + "x" + otGt + "...");
     }
 
     final Map<Long, Map<Long, Integer>> dLinks = new LinkedHashMap<Long, Map<Long, Integer>>();
@@ -327,12 +329,17 @@ public class TxosAggregator {
     dOutEntry.put(0L, new int[] {1, 0});
     dOutInitial.put(otGt, dOutEntry);
 
-    stack.add(new ComputeLinkMatrixTask(0, 0, itGt, dOutInitial));
+    // root task
+    final ComputeLinkMatrixTask rootTask = new ComputeLinkMatrixTask(0, 0, itGt, dOutInitial);
+    stack.add(rootTask);
+    List<int[]> rootIrcs = matInAggCmbn.get(rootTask.getIr());
+    int rootLenIrcs = (rootIrcs != null ? rootIrcs.size() : 0);
 
     // Sets start date/hour
     long startTime = System.currentTimeMillis();
 
-    int iteration = 0;
+    int totalIterations = 0;
+    int iterations = 0;
     // Iterates over all valid inputs combinations (top->down)
     while (!stack.isEmpty()) {
       // Checks duration
@@ -352,6 +359,7 @@ public class TxosAggregator {
       int lenIrcs = (ircs != null ? ircs.size() : 0);
 
       for (int i = t.getIdxIl(); i < lenIrcs; i++) {
+        iterations++;
         nIdxIl = i;
 
         // Gets left input sub-aggregate (column from ircs)
@@ -362,15 +370,20 @@ public class TxosAggregator {
           // Gets the right input sub-aggregate (row from ircs)
           int nIr = ircs.get(i)[0];
 
-          if (iteration % 50 == 0) {
+          if (iterations % 50 == 0) {
             if (log.isDebugEnabled()) {
               Utils.logMemory(
-                  "Computing link matrix... Task "
-                      + iteration
+                  "Computing links "
+                      + rootTask.getIdxIl()
                       + "/"
-                      + estIters
-                      + " est. ("
-                      + dLinks.size());
+                      + rootLenIrcs
+                      + "... "
+                      + iterations
+                      + "/"
+                      + totalIterations
+                      + "... ("
+                      + +dLinks.size()
+                      + " dlinks)");
             }
           }
 
@@ -379,9 +392,13 @@ public class TxosAggregator {
 
           // Updates idx_il for the current task
           t.setIdxIl(i + 1);
+          iterations++;
 
           // Pushes a new task which will decompose the right input aggregate
           stack.add(new ComputeLinkMatrixTask(0, nIl, nIr, ndOut));
+          List<int[]> newIrcs = matInAggCmbn.get((long) nIr);
+          int newLenIrcs = (newIrcs != null ? newIrcs.size() : 0);
+          totalIterations += newLenIrcs;
 
           // Executes the new task (depth-first)
           break;
@@ -391,7 +408,6 @@ public class TxosAggregator {
           break;
         }
       }
-      iteration++;
 
       // Checks if task has completed
       if (nIdxIl > (lenIrcs - 1)) {
@@ -412,7 +428,17 @@ public class TxosAggregator {
     }
     if (log.isDebugEnabled()) {
       Utils.logMemory(
-          "Computing link matrix DONE... (" + iteration + " iterations/" + estIters + " est.)");
+          "Computing links DONE... ("
+              + rootTask.getIdxIl()
+              + "/"
+              + rootLenIrcs
+              + ", "
+              + iterations
+              + "/"
+              + totalIterations
+              + ", "
+              + dLinks.size()
+              + " dlinks)");
     }
 
     TxosAggregatorResult result = finalizeLinkMatrix(allAgg, itGt, otGt, dLinks, nbTxCmbn);

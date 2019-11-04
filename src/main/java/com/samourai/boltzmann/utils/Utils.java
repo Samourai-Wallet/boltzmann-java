@@ -19,7 +19,8 @@ public class Utils {
       long freeMemory = runtime.freeMemory() / BYTE_TO_MB;
       long memory = totalMemory - freeMemory;
       long percent = 100 * memory / totalMemory;
-      log.debug(percent + "% mem used (" + freeMemory + "MB free) " + (msg != null ? msg : ""));
+      log.debug(
+          "(" + percent + "% mem used, " + freeMemory + "MB free) " + (msg != null ? msg : ""));
     }
   }
 }
