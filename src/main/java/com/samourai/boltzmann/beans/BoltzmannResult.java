@@ -127,7 +127,7 @@ public class BoltzmannResult extends TxProcessorResult {
     List<Object[]> benchmarks = new ArrayList<Object[]>();
 
     benchmarks.add(new Object[] {"duration", duration});
-    System.out.println("Duration = " + duration + "s");
+    System.out.println("Duration = " + Utils.duration(duration));
 
     long maxMem = Utils.getMaxMemUsed();
     benchmarks.add(new Object[] {"maxMem", maxMem});

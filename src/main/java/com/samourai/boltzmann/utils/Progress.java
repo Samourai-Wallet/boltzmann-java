@@ -6,7 +6,7 @@ public class Progress {
   private long last;
   private long current;
   private long target;
-  private long rate;
+  private double rate;
   private String msg;
 
   public Progress(String name, long current, long target) {
@@ -31,11 +31,18 @@ public class Progress {
   public String getProgress() {
     long elapsed = computeElapsed();
     long todo = target - current + 1;
-    long eta = rate * todo;
     long donePercent = current * 100 / target;
     String str = "[" + name + "] " + donePercent + "% " + current + "/" + target;
-    if (elapsed > 0 || eta > 0) {
-      str += " since " + (elapsed / 1000) + "s, ETA " + eta + "s";
+    if (elapsed > 0 || rate > 0) {
+      long eta = rate > 0 ? (long) (todo / rate) : 0;
+      str +=
+          " since "
+              + Utils.duration(elapsed / 1000)
+              + ", "
+              + String.format("%.3f", rate)
+              + "/s"
+              + ", ETA "
+              + Utils.duration(eta);
     }
     str += "...";
     return str;
@@ -44,21 +51,33 @@ public class Progress {
   public String getResult() {
     long elapsed = computeElapsed();
     String str =
-        "[" + name + "] " + target + "x in " + (elapsed / 1000) + "s (" + rate + "/s) " + msg;
+        "["
+            + name
+            + "] "
+            + target
+            + "x in "
+            + Utils.duration(elapsed)
+            + "s ("
+            + rate
+            + "/s) "
+            + msg;
     return str;
   }
 
   public void update(long current, long target) {
     long now = System.currentTimeMillis();
 
-    // update rate
-    long doneSincePrevious = current - this.current;
-    long elapsedSincePrevious = (now - this.last) / 1000;
-    this.rate = doneSincePrevious > 0 ? doneSincePrevious / elapsedSincePrevious : 0;
-
     // update progress
-    this.last = now;
+    double newRate = ((double) current) / ((now - this.start) / 1000);
+    if (rate != 0) {
+      // avg
+      newRate = (rate + newRate) / 2;
+    }
+
+    this.rate = newRate;
     this.current = current;
+
+    this.last = now;
     this.target = target;
   }
 
@@ -67,6 +86,10 @@ public class Progress {
     this.current = target;
     this.target = target;
     this.msg = msg;
+
+    if (rate == 0) {
+      rate = target;
+    }
 
     long elapsed = computeElapsed();
     String str = "[" + name + "] 100% " + target + " done in " + (elapsed / 1000) + "s " + msg;
@@ -85,7 +108,7 @@ public class Progress {
     return last;
   }
 
-  public long getRate() {
+  public double getRate() {
     return rate;
   }
 

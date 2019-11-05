@@ -75,4 +75,38 @@ public class Utils {
   public static long getMaxMemUsed() {
     return maxMemUsed;
   }
+
+  public static String duration(long seconds) {
+    StringBuffer sb = new StringBuffer();
+    long minutes = 0;
+    long hours = 0;
+    long days = 0;
+    if (seconds >= 60) {
+      minutes = (long) Math.floor(seconds / 60);
+      seconds %= 60;
+
+      if (minutes >= 60) {
+        hours = (long) Math.floor(minutes / 60);
+        minutes %= 60;
+      }
+
+      if (hours >= 60) {
+        days = (long) Math.floor(hours / 24);
+        hours %= 24;
+      }
+    }
+    if (days > 0) {
+      sb.append(days + "d");
+    }
+    if (hours > 0) {
+      sb.append(hours + "h");
+    }
+    if (minutes > 0) {
+      sb.append(minutes + "m");
+    }
+    if (seconds > 0 || sb.length() == 0) {
+      sb.append(seconds + "s");
+    }
+    return sb.toString();
+  }
 }
