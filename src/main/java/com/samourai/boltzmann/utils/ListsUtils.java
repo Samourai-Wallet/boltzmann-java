@@ -68,6 +68,7 @@ public class ListsUtils {
     return result;*/
     long max = 1L << a.length;
     ObjectBigList<long[]> result = new ObjectBigArrayBigList<long[]>(max);
+    final String PROGRESS_ID = "powerSet";
     for (int i = 0; i < max; ++i) {
       long[] line = new long[Long.bitCount(i)];
       long b = i;
@@ -75,12 +76,9 @@ public class ListsUtils {
         if ((b & 1) != 0) line[k++] = a[j];
       }
       result.add(line);
-      if (i % 10000000 == 0) {
-        if (log.isDebugEnabled()) {
-          Utils.logMemory("Computing powerset: " + i + "/" + max);
-        }
-      }
+        Utils.logProgress(PROGRESS_ID, i, max);
     }
+    Utils.logProgressDone(PROGRESS_ID, max);
 
     // consistency check
     long expectedSize = (long) Math.pow(2, a.length);

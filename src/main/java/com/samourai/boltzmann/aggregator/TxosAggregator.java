@@ -54,6 +54,7 @@ public class TxosAggregator {
             : 0; // doesn 't take into account tx fees paid by makers
 
     // Finds input and output aggregates with matching values
+    final String PROGRESS_ID = "matchAggByVal";
     IntStreams.range(0, allUniqueInAggVal.length)
         .parallel()
         .forEachOrdered(
@@ -62,11 +63,7 @@ public class TxosAggregator {
               public void accept(int i) {
                 long inAggVal = allUniqueInAggVal[i];
 
-                if (i % 400 == 0) {
-                  if (log.isDebugEnabled()) {
-                    Utils.logMemory(i + "/" + allUniqueInAggVal.length);
-                  }
-                }
+                  Utils.logProgress(PROGRESS_ID, i, allUniqueInAggVal.length);
 
                 for (int j = 0; j < allUniqueOutAggVal.length; j++) {
                   final long outAggVal = allUniqueOutAggVal[j];
@@ -116,6 +113,7 @@ public class TxosAggregator {
                 }
               }
             });
+    Utils.logProgressDone(PROGRESS_ID, allUniqueInAggVal.length);
     return new TxosAggregatesMatches(allMatchInAgg, matchInAggToVal, valToMatchOutAgg);
   }
 
@@ -138,6 +136,7 @@ public class TxosAggregator {
     if (!aggs.isEmpty()) {
       final int tgt = aggs.pollLast();
 
+      final String PROGRESS_ID = "computeInAggCmbn";
       IntStreams.range(0, tgt + 1)
           .parallel()
           .forEachOrdered(
@@ -161,23 +160,15 @@ public class TxosAggregator {
                               }
                             });
                   }
-                  if (i % 400 == 0) {
-                    if (log.isDebugEnabled()) {
-                      Utils.logMemory(
-                          "Computing combinations: "
-                              + i
-                              + "/"
-                              + tgt
-                              + "... ("
-                              + mat.size()
-                              + " matches)");
-                    }
-                  }
+                    Utils.logProgress(PROGRESS_ID, i, tgt,
+                        "Computing combinations... ("
+                            + mat.size()
+                            + " matches)"
+                        );
                 }
               });
-    }
-    if (log.isDebugEnabled()) {
-      Utils.logMemory("Computing combinations DONE: " + mat.size() + " matches");
+
+      Utils.logProgressDone(PROGRESS_ID, tgt, mat.size() + " matches");
     }
     return mat;
   }
@@ -340,6 +331,7 @@ public class TxosAggregator {
 
     int totalIterations = 0;
     int iterations = 0;
+    final String PROGRESS_ID = "computeLinkMatrix";
     // Iterates over all valid inputs combinations (top->down)
     while (!stack.isEmpty()) {
       // Checks duration
@@ -370,22 +362,14 @@ public class TxosAggregator {
           // Gets the right input sub-aggregate (row from ircs)
           int nIr = ircs.get(i)[0];
 
-          if (iterations % 50 == 0) {
-            if (log.isDebugEnabled()) {
-              Utils.logMemory(
-                  "Computing links "
-                      + rootTask.getIdxIl()
-                      + "/"
-                      + rootLenIrcs
-                      + "... "
-                      + iterations
-                      + "/"
-                      + totalIterations
-                      + "... ("
-                      + +dLinks.size()
-                      + " dlinks)");
-            }
-          }
+            Utils.logProgress(PROGRESS_ID, rootTask.getIdxIl(), rootLenIrcs,
+                "Links "
+                    + iterations
+                    + "/"
+                    + totalIterations +" ("
+                    + dLinks.size()
+                    + " dlinks)"
+                );
 
           // Run task
           Map<Long, Map<Long, int[]>> ndOut = runTask(nIl, nIr, aggMatches, otGt, t.getdOut());
@@ -426,20 +410,7 @@ public class TxosAggregator {
         }
       }
     }
-    if (log.isDebugEnabled()) {
-      Utils.logMemory(
-          "Computing links DONE... ("
-              + rootTask.getIdxIl()
-              + "/"
-              + rootLenIrcs
-              + ", "
-              + iterations
-              + "/"
-              + totalIterations
-              + ", "
-              + dLinks.size()
-              + " dlinks)");
-    }
+    Utils.logProgressDone(PROGRESS_ID, rootLenIrcs, dLinks.size() + " dlinks");
 
     TxosAggregatorResult result = finalizeLinkMatrix(allAgg, itGt, otGt, dLinks, nbTxCmbn);
     return result;
@@ -465,6 +436,7 @@ public class TxosAggregator {
     final long linksY = links.get(0).size64();
 
     // iterate dLinks key0
+    final String PROGRESS_ID = "finalizeLinkMatrix";
     StreamSupport.stream(dLinks.entrySet())
         .parallel()
         .forEachOrdered(
@@ -473,20 +445,14 @@ public class TxosAggregator {
               public void accept(final Map.Entry<Long, Map<Long, Integer>> firstKeyEntry) {
                 final long key0 = firstKeyEntry.getKey();
 
-                if (key0 % 100 == 0) {
-                  log.info(
-                      "Processing dLink "
-                          + key0
-                          + "/"
-                          + dLinks.size()
-                          + ": "
+                  Utils.logProgress(PROGRESS_ID, key0, dLinks.size(),
+                      "Processing dLink... "
                           + firstKeyEntry.getValue().size()
                           + " x ("
                           + linksX
                           + "x"
                           + linksY
                           + ")");
-                }
 
                 // iterate dLinks key1
                 StreamSupport.stream(firstKeyEntry.getValue().entrySet())
@@ -529,7 +495,7 @@ public class TxosAggregator {
                         });
               }
             });
-    Utils.logMemory("Filling matrix DONE");
+    Utils.logProgressDone(PROGRESS_ID, dLinks.size());
     return new TxosAggregatorResult(nbTxCmbn, links);
   }
 

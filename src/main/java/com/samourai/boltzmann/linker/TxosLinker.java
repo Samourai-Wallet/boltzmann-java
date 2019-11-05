@@ -398,6 +398,7 @@ public class TxosLinker {
     // int[] allAggVal = Arrays.stream(allAgg).mapToInt(array ->
     // Arrays.stream(array).sum()).toArray();
     List<Long> allAggVal = new LinkedList<Long>();
+    final String PROGRESS_ID = "prepareTxos";
     for (long[] array : allAggIndexes) {
       allAggVal.add(
           LongStreams.of(array)
@@ -410,17 +411,9 @@ public class TxosLinker {
                   })
               .sum());
 
-      if (log.isDebugEnabled()) {
-        if (allAggVal.size() % 10000000 == 0) {
-          Utils.logMemory(
-                  "Computing aggregates for "
-                          + initialTxos.size()
-                          + " utxos: "
-                          + allAggVal.size() + "/" + nbAggregates);
-        }
-      }
+        Utils.logProgress(PROGRESS_ID, allAggVal.size(), nbAggregates);
     }
-
+    Utils.logProgressDone(PROGRESS_ID, nbAggregates);
     return new TxosAggregatesData(txos, allAggIndexes, ListsUtils.toPrimitiveArray(allAggVal));
   }
 
