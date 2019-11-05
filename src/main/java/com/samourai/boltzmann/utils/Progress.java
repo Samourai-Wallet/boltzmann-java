@@ -58,7 +58,7 @@ public class Progress {
             + "x in "
             + Utils.duration(elapsed)
             + "s ("
-            + rate
+            + String.format("%.3f", rate)
             + "/s) "
             + msg;
     return str;
