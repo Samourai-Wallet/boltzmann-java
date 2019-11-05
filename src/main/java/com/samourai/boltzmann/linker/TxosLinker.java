@@ -411,7 +411,7 @@ public class TxosLinker {
                   })
               .sum());
 
-        Utils.logProgress(PROGRESS_ID, allAggVal.size(), nbAggregates);
+      Utils.logProgress(PROGRESS_ID, allAggVal.size(), nbAggregates);
     }
     Utils.logProgressDone(PROGRESS_ID, nbAggregates);
     return new TxosAggregatesData(txos, allAggIndexes, ListsUtils.toPrimitiveArray(allAggVal));

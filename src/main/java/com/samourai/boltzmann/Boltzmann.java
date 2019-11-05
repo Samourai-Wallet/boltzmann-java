@@ -8,7 +8,6 @@ import com.samourai.boltzmann.linker.TxosLinkerOptionEnum;
 import com.samourai.boltzmann.processor.TxProcessor;
 import com.samourai.boltzmann.processor.TxProcessorResult;
 import com.samourai.boltzmann.utils.ListsUtils;
-import com.samourai.boltzmann.utils.Utils;
 import java8.util.stream.LongStreams;
 
 public class Boltzmann {
@@ -44,12 +43,10 @@ public class Boltzmann {
 
     TxProcessorResult txProcessorResult =
         txProcessor.processTx(txos, maxCjIntrafeesRatio, linkerOptions);
-    BoltzmannResult result = new BoltzmannResult(txProcessorResult);
+
+    long duration = (System.currentTimeMillis() - t1) / 1000;
+    BoltzmannResult result = new BoltzmannResult(duration, txProcessorResult);
     result.print();
-
-    System.out.println("Duration = " + (System.currentTimeMillis() - t1) + "ms");
-
-    Utils.logProgressResults();
     return result;
   }
 }

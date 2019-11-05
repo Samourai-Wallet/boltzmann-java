@@ -63,7 +63,7 @@ public class TxosAggregator {
               public void accept(int i) {
                 long inAggVal = allUniqueInAggVal[i];
 
-                  Utils.logProgress(PROGRESS_ID, i, allUniqueInAggVal.length);
+                Utils.logProgress(PROGRESS_ID, i, allUniqueInAggVal.length);
 
                 for (int j = 0; j < allUniqueOutAggVal.length; j++) {
                   final long outAggVal = allUniqueOutAggVal[j];
@@ -160,11 +160,7 @@ public class TxosAggregator {
                               }
                             });
                   }
-                    Utils.logProgress(PROGRESS_ID, i, tgt,
-                        "Computing combinations... ("
-                            + mat.size()
-                            + " matches)"
-                        );
+                  Utils.logProgress(PROGRESS_ID, i, tgt, mat.size() + " matches");
                 }
               });
 
@@ -362,14 +358,11 @@ public class TxosAggregator {
           // Gets the right input sub-aggregate (row from ircs)
           int nIr = ircs.get(i)[0];
 
-            Utils.logProgress(PROGRESS_ID, rootTask.getIdxIl(), rootLenIrcs,
-                "Links "
-                    + iterations
-                    + "/"
-                    + totalIterations +" ("
-                    + dLinks.size()
-                    + " dlinks)"
-                );
+          Utils.logProgress(
+              PROGRESS_ID,
+              rootTask.getIdxIl(),
+              rootLenIrcs,
+              iterations + "/" + totalIterations + ", " + dLinks.size() + " dlinks");
 
           // Run task
           Map<Long, Map<Long, int[]>> ndOut = runTask(nIl, nIr, aggMatches, otGt, t.getdOut());
@@ -437,6 +430,7 @@ public class TxosAggregator {
 
     // iterate dLinks key0
     final String PROGRESS_ID = "finalizeLinkMatrix";
+    final long[] i = {0};
     StreamSupport.stream(dLinks.entrySet())
         .parallel()
         .forEachOrdered(
@@ -445,14 +439,17 @@ public class TxosAggregator {
               public void accept(final Map.Entry<Long, Map<Long, Integer>> firstKeyEntry) {
                 final long key0 = firstKeyEntry.getKey();
 
-                  Utils.logProgress(PROGRESS_ID, key0, dLinks.size(),
-                      "Processing dLink... "
-                          + firstKeyEntry.getValue().size()
-                          + " x ("
-                          + linksX
-                          + "x"
-                          + linksY
-                          + ")");
+                Utils.logProgress(
+                    PROGRESS_ID,
+                    i[0]++,
+                    dLinks.size(),
+                    "Processing dLink... "
+                        + firstKeyEntry.getValue().size()
+                        + " x ("
+                        + linksX
+                        + "x"
+                        + linksY
+                        + ")");
 
                 // iterate dLinks key1
                 StreamSupport.stream(firstKeyEntry.getValue().entrySet())

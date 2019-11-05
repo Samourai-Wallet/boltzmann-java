@@ -1,9 +1,8 @@
 package com.samourai.boltzmann.utils;
 
+import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.*;
 
 public class Utils {
   private static final Logger log = LoggerFactory.getLogger(Utils.class);
@@ -13,26 +12,27 @@ public class Utils {
   private static final Map<String, Progress> progressLast = new HashMap<String, Progress>();
   private static final List<Progress> progressResult = new LinkedList<Progress>();
 
-  public static void logMemory() {
-    logMemory(null);
-  }
+  private static long maxMemUsed = 0;
 
   public static void logMemory(String msg) {
     if (log.isDebugEnabled()) {
       Runtime runtime = Runtime.getRuntime();
-
-      long totalMemory = runtime.totalMemory() / BYTE_TO_MB;
       long freeMemory = runtime.freeMemory() / BYTE_TO_MB;
-      long memory = totalMemory - freeMemory;
-      long percent = 100 * memory / totalMemory;
-      log.debug(
-          "(" + percent + "% mem used, " + freeMemory + "MB free) " + (msg != null ? msg : ""));
+      log.debug(freeMemory + "M free - " + (msg != null ? msg : ""));
+
+      // update maxMemUsed
+      long totalMemory = runtime.totalMemory() / BYTE_TO_MB;
+      long used = totalMemory - freeMemory;
+      if (used > maxMemUsed) {
+        maxMemUsed = used;
+      }
     }
   }
 
   public static void logProgress(String progressId, long current, long target) {
     logProgress(progressId, current, target, "");
   }
+
   public static void logProgress(String progressId, long current, long target, String msg) {
     Progress progress = progressLast.get(progressId);
     long now = System.currentTimeMillis();
@@ -54,12 +54,13 @@ public class Utils {
       logMemory(progress.getProgress() + " " + msg);
     }
   }
+
   public static void logProgressDone(String progressId, long target) {
     logProgressDone(progressId, target, "");
   }
 
   public static void logProgressDone(String progressId, long target, String msg) {
-    Progress progress  = progressLast.remove(progressId);
+    Progress progress = progressLast.remove(progressId);
     progressResult.add(progress);
     if (log.isDebugEnabled()) {
       String str = progress.done(target, msg);
@@ -67,10 +68,11 @@ public class Utils {
     }
   }
 
-  public static void logProgressResults() {
-    log.info("Benchmarks:");
-for (Progress progress : progressResult) {
-  log.info(progress.getResult());
-}
+  public static List<Progress> getProgressResult() {
+    return progressResult;
+  }
+
+  public static long getMaxMemUsed() {
+    return maxMemUsed;
   }
 }

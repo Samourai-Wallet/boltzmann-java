@@ -3,14 +3,15 @@ package com.samourai.boltzmann.beans;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.math.DoubleMath;
 import com.samourai.boltzmann.processor.TxProcessorResult;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
+import com.samourai.boltzmann.utils.Progress;
+import com.samourai.boltzmann.utils.Utils;
+import java.util.*;
 
 public class BoltzmannResult extends TxProcessorResult {
   private String[][] dtrmLnks;
+  private long duration;
 
-  public BoltzmannResult(TxProcessorResult r) {
+  public BoltzmannResult(long duration, TxProcessorResult r) {
     super(
         r.getNbCmbn(),
         r.getMatLnkCombinations(),
@@ -27,6 +28,7 @@ public class BoltzmannResult extends TxProcessorResult {
         r.getDtrmLnksById() != null
             ? replaceDtrmLinks(r.getDtrmLnksById(), r.getTxos())
             : new String[][] {};
+    this.duration = duration;
   }
 
   private String[][] replaceDtrmLinks(Set<long[]> dtrmLinks, Txos txos) {
@@ -121,7 +123,28 @@ public class BoltzmannResult extends TxProcessorResult {
       System.out.println("Deterministic links: none");
     }
 
-    System.out.println(getTxos().getOutputs());
+    System.out.println("Benchmarks:");
+    List<Object[]> benchmarks = new ArrayList<Object[]>();
+
+    benchmarks.add(new Object[] {"duration", duration});
+    System.out.println("Duration = " + duration + "s");
+
+    long maxMem = Utils.getMaxMemUsed();
+    benchmarks.add(new Object[] {"maxMem", maxMem});
+    System.out.println("Max mem used: " + maxMem + "M");
+
+    for (Progress progress : Utils.getProgressResult()) {
+      System.out.println(progress.getResult());
+      Object[] result =
+          new Object[] {
+            progress.getName(),
+            progress.getTarget(),
+            progress.computeElapsed() / 1000,
+            progress.getRate(),
+            progress.getMsg()
+          };
+      benchmarks.add(result);
+    }
 
     try {
       Map export = new LinkedHashMap();
@@ -129,6 +152,8 @@ public class BoltzmannResult extends TxProcessorResult {
       export.put("outs", getTxos().getOutputs());
       export.put("nbCmbn", getNbCmbn());
       export.put("mat", getMatLnkCombinations().toString());
+      export.put("benchmarks", benchmarks);
+
       String exportStr = new ObjectMapper().writeValueAsString(export);
       System.out.println("Export: " + exportStr);
     } catch (Exception e) {

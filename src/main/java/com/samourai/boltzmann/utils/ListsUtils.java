@@ -76,7 +76,7 @@ public class ListsUtils {
         if ((b & 1) != 0) line[k++] = a[j];
       }
       result.add(line);
-        Utils.logProgress(PROGRESS_ID, i, max);
+      Utils.logProgress(PROGRESS_ID, i, max);
     }
     Utils.logProgressDone(PROGRESS_ID, max);
 
