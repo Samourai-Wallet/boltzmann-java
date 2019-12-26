@@ -15,10 +15,10 @@ public class BoltzmannSettings {
       };
 
   /** max duration allocated to processing of a single tx (in seconds) */
-  private int maxDuration;
+  private Integer maxDuration;
 
   /** max number of txos. Txs with more than max_txos inputs or outputs are not processed. */
-  private int maxTxos;
+  private Integer maxTxos;
 
   /**
    * max intrafees paid by the taker of a coinjoined transaction. Expressed as a percentage of the
@@ -36,19 +36,19 @@ public class BoltzmannSettings {
     this.options = OPTIONS_DEFAULT;
   }
 
-  public int getMaxDuration() {
+  public Integer getMaxDuration() {
     return maxDuration;
   }
 
-  public void setMaxDuration(int maxDuration) {
+  public void setMaxDuration(Integer maxDuration) {
     this.maxDuration = maxDuration;
   }
 
-  public int getMaxTxos() {
+  public Integer getMaxTxos() {
     return maxTxos;
   }
 
-  public void setMaxTxos(int maxTxos) {
+  public void setMaxTxos(Integer maxTxos) {
     this.maxTxos = maxTxos;
   }
 
