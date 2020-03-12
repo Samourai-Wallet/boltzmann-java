@@ -7,8 +7,7 @@ A Java library computing the entropy of Bitcoin transactions and the linkability
 
 For a description of the metrics :
 
-- Bitcoin Transactions & Priva
-cy (part 1) : https://gist.github.com/LaurentMT/e758767ca4038ac40aaf
+- Bitcoin Transactions & Privacy (part 1) : https://gist.github.com/LaurentMT/e758767ca4038ac40aaf
 
 - Bitcoin Transactions & Privacy (part 2) : https://gist.github.com/LaurentMT/d361bca6dc52868573a2
 
